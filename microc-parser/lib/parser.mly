@@ -3,43 +3,40 @@
 */
 
 %{
-     (* Auxiliary definitions *)   
-
+  (* Auxiliary definitions *)
 %}
 
 /* Tokens declarations */
+%token EOF
 %token <int> INT
-%token PLUS MINUS TIMES DIV
+%token ADD SUB MULT DIV
 %token LPAREN RPAREN
 //%token IF
-%token EOF
 
 /* Precedence and associativity specification */
-%left PLUS MINUS        /* lowest precedence */
-%left TIMES DIV         /* medium precedence */
-%nonassoc UMINUS        /* highest precedence */
+%left ADD SUB        /* lowest precedence */
+%left MULT DIV         /* medium precedence */
+%nonassoc NEG        /* highest precedence */
 
 /* Starting symbol */
 
-(*%start program
-//%type <Ast.program> program    /* the parser returns a Ast.program value */
-%type <int> program
-%%*)
-%start program             /* the entry point */
-%type <int> program
+%start program
+%type <Ast.program> program    /* the parser returns a Ast.program value */
 %%
-program:
-    expression EOF                { $1 }
-;
 
 /* Grammar specification */
 
+program:
+    expression EOF                { Ast.Prog([]) }
+;
+
 expression:
-    INT                               { $1 }
-  | LPAREN expression RPAREN          { $2 }
-  | expression PLUS expression        { $1 + $3 }
-  | expression MINUS expression       { $1 - $3 }
-  | expression TIMES expression       { $1 * $3 }
-  | expression DIV expression         { $1 / $3 }
-  | MINUS expression %prec UMINUS     { - $2 }
+    INT                               { Ast.Prog([]) } // { $1 }
+  | LPAREN expression RPAREN          { Ast.Prog([]) } // { $2 }
+  | expression ADD expression        { Ast.Prog([]) } // { $1 + $3 }
+  | expression SUB expression       { Ast.Prog([]) } // { $1 - $3 }
+  | expression MULT expression       { Ast.Prog([]) } // { $1 * $3 }
+  | expression DIV expression         { Ast.Prog([]) } // { $1 / $3 }
+  | SUB expression %prec NEG    { Ast.Prog([]) } // { - $2 }
+  | EOF                      {Ast.Prog([])}
 ;

@@ -45,9 +45,9 @@ rule next_token = parse
 							printf "identifier: %s\n" word;
 							ID word
 						}*)
-	| '+'            	{ PLUS }
-	| '-'            	{ MINUS }
-	| '*'            	{ TIMES }
+	| '+'            	{ ADD }
+	| '-'            	{ SUB }
+	| '*'            	{ MULT }
 	| '/'            	{ DIV }
 	| '('            	{ LPAREN }
 	| ')'            	{ RPAREN }

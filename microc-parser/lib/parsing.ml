@@ -5,13 +5,15 @@ exception Syntax_error of Location.lexeme_pos * string
 
 let token_to_string = function
     INT(value)  ->	string_of_int value
-  | PLUS        ->  " piu "
-	| MINUS       ->  " meno "
-	| TIMES       ->  " per "
+  | ADD        ->  " piu "
+	| SUB       ->  " meno "
+	| MULT       ->  " per "
 	| DIV         ->  " diviso "
 	| LPAREN      ->  "("
 	| RPAREN      ->  ")"
   | EOF         ->  ""
+
+let print_error outchan pos msg = Printf.fprintf outchan "\027[31m\nerror:\027[0m line %d, position %d\n       %s\n" pos.line pos.start_column msg
 
 let rec parse scanner lexbuf =
   let token = scanner lexbuf in
@@ -30,6 +32,5 @@ let () =
   try
     parse Scanner.next_token lexbuf
   with
-  | Scanner.Lexing_error (pos, msg) ->
-    Printf.fprintf stderr "ERROR: line %d, position %d\n       %s\n" pos.line pos.start_column msg
+  | Scanner.Lexing_error (pos, msg) -> print_error stderr pos msg
   | End_of_file -> ()
