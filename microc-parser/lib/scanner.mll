@@ -35,7 +35,7 @@ let identifier = letter (letter | digit | '_')*
 
 (* Scanner specification *)
 rule next_token = parse
-	  [' ' '\t' '\n']   { next_token lexbuf }	(* ignore and skip whitespace *)
+	  [' ' '\t' '\n' '\r']+   { next_token lexbuf }	(* ignore and skip whitespace *)
 	| digit+ as lit 	{ INT(int_of_string lit) }
 	(*| identifier as word{ try					(* identifier or keyword *)
 						  let token = Hashtbl.find keywords_table word in
