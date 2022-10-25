@@ -1,6 +1,6 @@
 open Microc.Location
 
-let print_error outchan pos msg = Printf.fprintf outchan "\027[31m\nerror:\027[0m line %d, position %d\n       %s\n" pos.line pos.start_column msg
+let print_error outchan pos msg = Printf.fprintf outchan "\027[1;31m\nError:\027[0m line %d, position %d\n       %s\n" pos.line pos.start_column msg
 
 let _ =
   let input_channel =

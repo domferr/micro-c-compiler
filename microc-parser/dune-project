@@ -4,9 +4,9 @@
 
 (generate_opam_files true)
 
-(authors "LCI-2022")
+(authors "Domenico Ferraro")
 
-(maintainers "LCI-2022")
+(maintainers "Domenico Ferraro")
 
 (license ISC)
 
