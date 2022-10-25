@@ -51,5 +51,5 @@ rule next_token = parse
 	| '/'            	{ DIV }
 	| '('            	{ LPAREN }
 	| ')'            	{ RPAREN }
-	| eof            	{ raise End_of_file }
+	| eof            	{ EOF }
 	| _ 				{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }
