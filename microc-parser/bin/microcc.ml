@@ -8,7 +8,10 @@ let () =
   	let lexbuf = Lexing.from_channel ~with_positions:true input_channel in
   	try
     	let result = Microc.Parsing.parse Microc.Scanner.next_token lexbuf in
-      	Printf.fprintf stdout "\n%s\n" (Microc.Ast.show_program result)
+      	Printf.fprintf stdout "\n%s\n" (Microc.Ast.show_program result);
+				close_in input_channel;
   	with
-    	| Microc.Scanner.Lexing_error (pos, msg) -> Microc.Errors.print_error input_channel stdout pos msg
+    	| Microc.Scanner.Lexing_error (pos, msg) -> 
+					Microc.Errors.report_error input_channel stdout pos msg;
+					close_in input_channel;
 	
