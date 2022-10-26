@@ -8,16 +8,20 @@
 
 /* Tokens declarations */
 %token EOF
-%token <int> INTEGER
 %token <string> ID
+%token <int> INTEGER
+%token <bool> BOOLEAN
+/* Operators */
 %token ADD SUB MULT DIV
-%token EQ
+%token EQ GT LT GEQ LEQ
+/* Other symbols */
 %token LPAREN RPAREN
 %token LBRACE RBRACE
 %token LBRACKET RBRACKET
-%token RETURN
 %token SEMICOL
-%token INT
+/* Keywords */
+%token INT CHAR BOOL VOID NULL
+%token IF RETURN ELSE FOR WHILE
 
 /* Precedence and associativity specification */
 %left ADD SUB        /* lowest precedence */
@@ -37,13 +41,12 @@ program:
 ;
 
 expression:
-    INTEGER                               { Ast.Prog([]) } // { $1 }
-  | INT ID                          { Ast.Prog([]) } // { $1 }
-  | RETURN expression SEMICOL                          { Ast.Prog([]) } // { $1 }
-  | ID EQ expression SEMICOL                          { Ast.Prog([]) } // { $1 }
-  | LPAREN expression RPAREN          { Ast.Prog([]) } // { $2 }
-  | LBRACE expression RBRACE          { Ast.Prog([]) } // { $2 }
-  | LBRACKET expression RBRACKET          { Ast.Prog([]) } // { $2 }
+    INTEGER                               { Ast.Prog([]) }
+  | INT ID SEMICOL                        { Ast.Prog([]) }
+  | ID EQ expression SEMICOL                          { Ast.Prog([]) }
+  | VOID ID LPAREN INT ID RPAREN LBRACE expression RBRACE                        { Ast.Prog([]) }
+  | INT ID LPAREN RPAREN LBRACE expression RBRACE                        { Ast.Prog([]) }
+  | RETURN expression SEMICOL                          { Ast.Prog([]) }
   | expression ADD expression        { Ast.Prog([]) } // { $1 + $3 }
   | expression SUB expression       { Ast.Prog([]) } // { $1 - $3 }
   | expression MULT expression       { Ast.Prog([]) } // { $1 * $3 }

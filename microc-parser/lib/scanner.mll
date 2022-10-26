@@ -10,8 +10,15 @@
 		tbl
 	
 	let keywords_table =
-		create_hashtable 2 [
+		create_hashtable 7 [
 			("int", INT);
+			("char", CHAR);
+			("bool", BOOL);
+			("void", VOID);
+			("if", IF);
+			("else", ELSE);
+			("for", FOR);
+			("while", WHILE);
 			("return", RETURN)
 		]
 }
@@ -19,7 +26,7 @@
 let newline = '\n' | '\r' '\n'
 let letter = ['a'-'z' 'A'-'Z']
 let digit = ['0' - '9']
-let identifier = letter (letter | digit | '_')*
+let identifier = (letter | '_') (letter | digit | '_')*
 
 (* Scanner specification *)
 rule next_token = parse
@@ -32,11 +39,17 @@ rule next_token = parse
 		| Some token 	-> token 
 		| None 			-> ID(word)
 	}
+	| "true"			{ BOOLEAN(true) }
+	| "false"			{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
 	| '+'            	{ ADD }
 	| '-'            	{ SUB }
 	| '*'            	{ MULT }
 	| '/'            	{ DIV }
 	| '='            	{ EQ }
+	| '>'            	{ GT }
+	| '<'            	{ LT }
+	| ">="            	{ GEQ }
+	| "<="            	{ LEQ }
 	| '('            	{ LPAREN }
 	| ')'            	{ RPAREN }
 	| '['            	{ LBRACKET }

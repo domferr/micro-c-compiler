@@ -12,6 +12,9 @@ let () =
 				close_in input_channel;
   	with
     	| Microc.Scanner.Lexing_error (pos, msg) -> 
-					Microc.Errors.report_error input_channel stdout pos msg;
+					Microc.Errors.report_error "Error" input_channel stdout pos msg;
+					close_in input_channel;
+			| Microc.Parsing.Syntax_error (pos, msg) -> 
+					Microc.Errors.report_error "Syntax error" input_channel stdout pos msg;
 					close_in input_channel;
 	
