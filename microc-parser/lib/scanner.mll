@@ -53,6 +53,8 @@ rule next_token = parse
 	| ">="      { GEQ }
 	| "<="      { LEQ }
 	| "!="      { NEQ }
+	| "&&"      { AND }
+	| "||"      { OR }
 	| '('       { LPAREN }
 	| ')'       { RPAREN }
 	| '['       { LBRACKET }

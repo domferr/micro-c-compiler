@@ -20,6 +20,7 @@
 /* Operators */
 %token ADD SUB MULT DIV MOD ASSIGN
 %token EQ GT LT GEQ LEQ NEQ
+%token OR AND
 /* Other symbols */
 %token LPAREN RPAREN
 %token LBRACE RBRACE
@@ -51,8 +52,8 @@
 %nonassoc ELSE
 
 %right ASSIGN         /* lowest precedence */
-//%left || 
-//%left && 
+%left OR 
+%left AND 
 %left EQ NEQ
 %nonassoc GT LT GEQ LEQ
 %left ADD SUB 
@@ -168,8 +169,8 @@ aexpr:
   | MULT  { Ast.Mult }
   | MOD   { Ast.Mod }
   | DIV   { Ast.Div }
-  //| "&&"
-  //| "||"
+  | AND   { Ast.And }
+  | OR    { Ast.Or }
   | EQ    { Ast.Equal }
   | NEQ   { Ast.Neq }
   | LT    { Ast.Less }

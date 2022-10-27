@@ -59,3 +59,16 @@ void test_while() {
     a = 10;
   }
 }
+
+void test_and_or() {
+  if (a || b) {
+    a = 10;
+  }
+
+  if (a && b) {
+    b = 1;
+  }
+
+  bool yes;
+  yes = a || b;
+}
