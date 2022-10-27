@@ -39,8 +39,8 @@ rule next_token = parse
 		| Some token 	-> token 
 		| None 				-> ID(word)
 	}
-	| "true"		{ BOOLEAN(true) }
-	| "false"		{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
+	| "true"	{ BOOLEAN(true) }
+	| "false"	{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
 	| '+'       { ADD }
 	| '-'       { SUB }
 	| '*'       { MULT }
@@ -64,5 +64,5 @@ rule next_token = parse
 	| '}'       { RBRACE }
 	| ';'       { SEMICOL }
 	| ','       { COMMA }
-	| eof				{ EOF }
-	| _ 				{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }
+	| eof		{ EOF }
+	| _ 		{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }

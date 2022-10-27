@@ -80,3 +80,37 @@ int main() {
   int not;
   not = !true;
 }
+
+int test_for(int a) {
+  int i;
+  for(; ; ) {
+    a = a + 10;
+  }
+  for(; ; i = i + 1) {
+    a = a + 10;
+  }
+  for( ; i < 10; ) {
+    a = a + 10;
+  }
+  for(; i < 10; i = i + 1) {
+    a = a + 10;
+  }
+  for(i = 0; ; ) {
+    a = a + 10;
+  }
+  for(i = 0; ; i = i + 1) {
+    a = a + 10;
+  }
+  for(i = 0; i < 10; ) {
+    a = a + 10;
+  }
+  for(i = 0; i < 10; i = i + 1) {
+    a = a + 10;
+  }
+
+  i = 0;
+  while(i<10) {
+    a = a + 10;
+    i = i + 1;
+  }
+}

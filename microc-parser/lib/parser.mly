@@ -2,11 +2,24 @@
 * MicroC Parser specification
 */
 
+(*  
+  'for' loop is transformed into 'while' loop.
+  for (init; cond; incr) { 
+    content; 
+  }
+  The above 'for' loop becomes:
+  init; 
+  while(cond) { 
+    content; 
+    incr; 
+  }
+*)
+
 %{
   (* Auxiliary definitions *)
   open Ast
 
-  let build_annotated_node l n =
+  let build_node l n =
     { loc = Location.to_code_position(l); node = n }
 
 %}
@@ -76,13 +89,14 @@ program:
 topdecl:
     v = vardecl SEMICOL 
     { 
-      build_annotated_node $loc (Ast.Vardec( fst v, snd v )) 
+      build_node $loc (Ast.Vardec( fst v, snd v )) 
     }
   | typ ID LPAREN form = separated_list(COMMA, vardecl) RPAREN b = block 
     { 
-      let block_node = build_annotated_node $loc b in 
-      build_annotated_node $loc (Ast.Fundecl { 
-        typ = $1; fname = $2; formals = form; body = block_node })
+      let block_node = build_node $loc b in 
+      build_node $loc (Ast.Fundecl{ 
+        typ = $1; fname = $2; formals = form; body = block_node 
+      })
     }
 ;
 
@@ -110,43 +124,66 @@ block:  // (stmt | vardecl SEMICOL)*
 ;
 
 stmtordec:
-    v = vardecl SEMICOL   { build_annotated_node $loc (Ast.Dec( fst v, snd v )) }
-  | stmt                  { build_annotated_node $loc (Ast.Stmt($1)) }
+    v = vardecl SEMICOL   { build_node $loc (Ast.Dec( fst v, snd v )) }
+  | stmt                  { build_node $loc (Ast.Stmt($1)) }
 ;
 
 stmt:
-    RETURN expr? SEMICOL          { build_annotated_node $loc (Ast.Return($2)) }
-  | expr SEMICOL                  { build_annotated_node $loc (Ast.Expr($1)) } // todo it was 'expr?', why?
-  | block                         { build_annotated_node $loc $1 }
-  | WHILE e = delimited(LPAREN, expr, RPAREN) s = stmt 
-    { build_annotated_node $loc (Ast.While(e, s)) }
-  //| FOR LPAREN expr? SEMICOL expr? SEMICOL expr? RPAREN stmt  {  }
+    RETURN expr? SEMICOL          { build_node $loc (Ast.Return($2)) }
+  | expr SEMICOL                  { build_node $loc (Ast.Expr($1)) } // todo it was 'expr?', why?
+  | block                         { build_node $loc $1 }
+  | WHILE cond = delimited(LPAREN, expr, RPAREN) body = stmt 
+    { build_node $loc (Ast.While(cond, body)) }
+  //| FOR LPAREN init = option(expr) SEMICOL cond = option(expr) SEMICOL incr = option(expr) RPAREN body = stmt  
+  | FOR LPAREN init = option(expr) SEMICOL cond = option(expr) SEMICOL incr = option(expr) RPAREN body = stmt  
+  { 
+    let while_body = match incr with 
+      | None    ->  body
+      | Some v  ->  let incr_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
+                    build_node $loc (Ast.Block([
+                      build_node $loc (Ast.Stmt(body));     (* stmt -> stmtordec *)
+                      build_node $loc (Ast.Stmt(incr_stmt)) (* stmt -> stmtordec *)
+                    ]))
+    in
+    let condition = match cond with
+      | None    ->  build_node $loc (Ast.BLiteral(true))
+      | Some v  ->  v
+    in
+    let while_stmt_node = build_node $loc (Ast.While(condition, while_body)) in  (* while -> stmt *)
+    match init with
+      | None    ->  while_stmt_node
+      | Some v  ->  let init_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
+                    build_node $loc (Ast.Block([
+                      build_node $loc (Ast.Stmt(init_stmt));          (* stmt -> stmtordec *)
+                      build_node $loc (Ast.Stmt(while_stmt_node))     (* stmt -> stmtordec *)
+                    ]))
+  }
   | IF LPAREN cond = expr RPAREN then_branch = stmt %prec THEN
     {
-      let else_branch = build_annotated_node $loc (Ast.Block([])) in
-      build_annotated_node $loc (Ast.If(cond, then_branch, else_branch))
+      let else_branch = build_node $loc (Ast.Block([])) in
+      build_node $loc (Ast.If(cond, then_branch, else_branch))
     }
   | IF LPAREN cond = expr RPAREN then_branch = stmt ELSE else_branch = stmt
     {
-      build_annotated_node $loc (Ast.If(cond, then_branch, else_branch))
+      build_node $loc (Ast.If(cond, then_branch, else_branch))
     }
 ;
 
 expr:
-    lexpr   { build_annotated_node $loc (Ast.Access($1)) }
-  | rexpr   { build_annotated_node $loc $1 }
+    lexpr   { build_node $loc (Ast.Access($1)) }
+  | rexpr   { build_node $loc $1 }
 ;
 
-lexpr: //lexpr -> access
-    ID                  { build_annotated_node $loc (Ast.AccVar($1)) }
-  | LPAREN lexpr RPAREN { $2 }
+lexpr:
+    ID                            { build_node $loc (Ast.AccVar($1)) }
+  | LPAREN e = lexpr RPAREN       { e }
   // | "*" lexpr
   // | "*" aexpr
-  | lexpr LBRACKET expr RBRACKET  { build_annotated_node $loc (Ast.AccIndex($1, $3)) }
+  | lexpr LBRACKET expr RBRACKET  { build_node $loc (Ast.AccIndex($1, $3)) }
 ;
 
 rexpr:
-    aexpr                 { $1 }
+    aexpr                   { $1 }
   | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
                             { Ast.Call($1, params) } // ((expr COMMA)* expr)?
   | lexpr ASSIGN expr       { Ast.Assign($1, $3) }
