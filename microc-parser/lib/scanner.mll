@@ -55,6 +55,7 @@ rule next_token = parse
 	| "!="      { NEQ }
 	| "&&"      { AND }
 	| "||"      { OR }
+	| "!"      	{ NOT }
 	| '('       { LPAREN }
 	| ')'       { RPAREN }
 	| '['       { LBRACKET }

@@ -20,7 +20,7 @@
 /* Operators */
 %token ADD SUB MULT DIV MOD ASSIGN
 %token EQ GT LT GEQ LEQ NEQ
-%token OR AND
+%token OR AND NOT
 /* Other symbols */
 %token LPAREN RPAREN
 %token LBRACE RBRACE
@@ -58,7 +58,7 @@
 %nonassoc GT LT GEQ LEQ
 %left ADD SUB 
 %left MULT DIV MOD
-//%nonassoc ! &
+%nonassoc NOT // &
 %nonassoc NEG
 //%nonassoc LBRACKET    /* highest precedence  */
 
@@ -150,7 +150,7 @@ rexpr:
   | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
                             { Ast.Call($1, params) } // ((expr COMMA)* expr)?
   | lexpr ASSIGN expr       { Ast.Assign($1, $3) }
-  //| "!" expr
+  | NOT e = expr            { Ast.UnaryOp(Ast.Not, e) }
   | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
   | expr binop expr         { Ast.BinaryOp($2, $1, $3) }
 ;

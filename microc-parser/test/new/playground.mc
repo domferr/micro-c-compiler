@@ -76,4 +76,7 @@ void test_and_or() {
 int main() {
   int negation;
   negation = 10 - -8;
+
+  int not;
+  not = !true;
 }
