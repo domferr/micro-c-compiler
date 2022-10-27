@@ -13,5 +13,15 @@ int without_params()
   int inside;
 }
 
+int brace_on_this_line() {
+  int inside;
+}
+
 int _starting_with_underscore;
 int _____starting_with_multiple_underscores;
+
+void multiple_params(int c, int d)
+{
+  int inner;
+  bool inside;
+}

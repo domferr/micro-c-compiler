@@ -9,7 +9,7 @@ let print_error_lines error_channel sourcecode_channel from_line to_line =
 		done
 	with _ -> ()
 
-let max_number_of_lines = 3 (* How many lines of the sourcecode to print before printing the error *)
+let max_number_of_lines = 6 (* How many lines of the sourcecode to print before printing the error *)
 
 let report_error header_str file_channel outchan pos msg =
 	(* Line in which the error occurred *)
