@@ -8,6 +8,7 @@
 
   let build_annotated_node l n =
     { loc = Location.to_code_position(l); node = n }
+
 %}
 
 
@@ -26,10 +27,29 @@
 %token SEMICOL COMMA
 /* Keywords */
 %token INT CHAR VOID BOOL NULL
-%token IF RETURN ELSE FOR WHILE
+%token IF RETURN THEN ELSE FOR WHILE
 
 
 /* ------ Precedence and associativity specification ------ */
+(* The instruction [if c1 then if c2 then i1 else i2] involves a classic
+   shift/reduce conflict, known as the dangling-else conflict. The conflict
+   occurs when the token [ELSE] is discovered. At this point, reducing the
+   production [instruction -> IF condition THEN instruction] leads
+   to interpreting this instruction as [if c1 then (if c2 then i1) else i2],
+   while shifting the token [ELSE] leads to interpreting it as
+   [if c1 then (if c2 then i1 else i2)]. The desired behavior is the latter,
+   so we must resolve the conflict in favor of shifting. By default, the
+   precedence level associated with reducing the above production is the
+   level of the token [THEN]. (This convention is explained in Menhir's
+   manual. It is inherited from yacc.) So, we give [THEN] a lower precedence
+   level than [ELSE]. This is done by the last two lines in the declarations
+   that follow. 
+
+  From: http://gallium.inria.fr/~fpottier/X/INF564/html/parser.mly.html   
+*)
+%nonassoc THEN
+%nonassoc ELSE
+
 %right ASSIGN         /* lowest precedence */
 //%left || 
 //%left && 
@@ -96,12 +116,18 @@ stmt:
     RETURN expr? SEMICOL          { build_annotated_node $loc (Ast.Return($2)) }
   | expr SEMICOL                  { build_annotated_node $loc (Ast.Expr($1)) } // todo it was 'expr?', why?
   | block                         { build_annotated_node $loc $1 }
-  | WHILE LPAREN e = expr RPAREN s = stmt 
+  | WHILE e = delimited(LPAREN, expr, RPAREN) s = stmt 
     { build_annotated_node $loc (Ast.While(e, s)) }
   //| FOR LPAREN expr? SEMICOL expr? SEMICOL expr? RPAREN stmt  {  }
-  | IF LPAREN cond = expr RPAREN then_branch = stmt ELSE else_branch = stmt 
-    { build_annotated_node $loc (Ast.If(cond, then_branch, else_branch)) }
-  // | IF LPAREN expr RPAREN stmt
+  | IF LPAREN cond = expr RPAREN then_branch = stmt %prec THEN
+    {
+      let else_branch = build_annotated_node $loc (Ast.Block([])) in
+      build_annotated_node $loc (Ast.If(cond, then_branch, else_branch))
+    }
+  | IF LPAREN cond = expr RPAREN then_branch = stmt ELSE else_branch = stmt
+    {
+      build_annotated_node $loc (Ast.If(cond, then_branch, else_branch))
+    }
 ;
 
 expr:
