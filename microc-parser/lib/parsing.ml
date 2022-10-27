@@ -1,6 +1,6 @@
 exception Syntax_error of Location.lexeme_pos * string
 
-let parse scanner lexbuf = 
+let parse scanner lexbuf =
   try
     Parser.program scanner lexbuf
   with

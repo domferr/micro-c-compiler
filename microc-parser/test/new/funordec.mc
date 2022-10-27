@@ -3,6 +3,8 @@ int a;
 void foo(int c)
 {
   int inner;
+  a;
+  return;
 }
 
 int b;
@@ -11,6 +13,7 @@ bool b2;
 int without_params()
 {
   int inside;
+  return 0;
 }
 
 int brace_on_this_line() {

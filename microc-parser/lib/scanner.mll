@@ -10,7 +10,7 @@
 		tbl
 	
 	let keywords_table =
-		create_hashtable 7 [
+		create_hashtable 9 [
 			("int", INT);
 			("char", CHAR);
 			("bool", BOOL);

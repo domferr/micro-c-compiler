@@ -48,14 +48,13 @@ program:
 topdecl:
     v = vardecl SEMICOL 
     { 
-      let vardec = Ast.Vardec( fst v, snd v ) in 
-      build_annotated_node $loc vardec 
+      build_annotated_node $loc (Ast.Vardec( fst v, snd v )) 
     }
   | typ ID LPAREN form = separated_list(COMMA, vardecl) RPAREN b = block 
     { 
       let block_node = build_annotated_node $loc b in 
-      let fun_decl = Ast.Fundecl { typ = $1; fname = $2; formals = form; body = block_node } in
-      build_annotated_node $loc fun_decl
+      build_annotated_node $loc (Ast.Fundecl { 
+        typ = $1; fname = $2; formals = form; body = block_node })
     }
 ;
 
@@ -83,37 +82,35 @@ block:  // (stmt | vardecl SEMICOL)*
 ;
 
 stmtordec:
-    // stmt            { build_annotated_node($loc, $1)}
-  | v = vardecl SEMICOL 
-    { let dec = Ast.Dec( fst v, snd v ) in
-      build_annotated_node $loc dec
-    }
+    v = vardecl SEMICOL   { build_annotated_node $loc (Ast.Dec( fst v, snd v )) }
+  | stmt                  { build_annotated_node $loc (Ast.Stmt($1)) }
 ;
 
-/* stmt: // todo return stmt_node
-    RETURN expr? SEMICOL
-  | expr? SEMICOL
-  | block
-  | WHILE LPAREN expr RPAREN stmt
-  | FOR LPAREN expr? SEMICOL expr? SEMICOL expr? RPAREN stmt
-  | IF LPAREN expr RPAREN stmt ELSE stmt
-  | IF LPAREN expr RPAREN stmt
+stmt: // todo return stmt_node
+    RETURN expr? SEMICOL  { build_annotated_node $loc (Ast.Return($2)) }
+  | expr SEMICOL          { build_annotated_node $loc (Ast.Expr($1)) } // todo it was 'expr?'
+  | block                 { build_annotated_node $loc $1 }
+  // | WHILE LPAREN expr RPAREN stmt { Ast.While(expr, stmt) }
+  // | FOR LPAREN expr? SEMICOL expr? SEMICOL expr? RPAREN stmt
+  // | IF LPAREN expr RPAREN stmt ELSE stmt
+  // | IF LPAREN expr RPAREN stmt
 ;
 
 expr:
-    rexpr
-  | lexpr
+    lexpr   { build_annotated_node $loc (Ast.Access($1)) }
+  //| rexpr
+  // | lexpr
 ;
 
-lexpr:
-    ID
-  | LAPREN lexpr RPAREN
+ lexpr:
+    ID                  { build_annotated_node $loc (Ast.AccVar($1)) }
+  | LPAREN lexpr RPAREN { $2 }
   // | "*" lexpr
   // | "*" aexpr
-  | lexpr LBRACKET expr RBRACKET
+  //| lexpr LBRACKET expr RBRACKET
 ;
 
-rexpr:
+/* rexpr:
     aexpr
   | ID LPAREN ((expr COMMA)* expr)? RPAREN
   | lexpr EQ expr
@@ -139,11 +136,11 @@ binop:
   | DIV
   //| "&&"
   //| "||"
+  | EQ
   | LT
   | GT
   | LEG
   | GEQ
-  | EQEQ
   | NEQ
 ; */
 

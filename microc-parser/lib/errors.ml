@@ -28,3 +28,4 @@ let report_error header_str file_channel outchan pos msg =
 	Printf.fprintf outchan "%s\027[1;31m%s\027[0m\n" space_before_arrows error_arrows;
 	Printf.fprintf outchan "\027[1;31m%s:\027[0m line %d, position %d\n" header_str error_line pos.Location.start_column;
 	Printf.fprintf outchan "%s%s\n" bottom_header_space msg
+	(* todo flush outchan *)
