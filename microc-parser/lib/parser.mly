@@ -27,12 +27,18 @@
 %token INT CHAR VOID BOOL NULL
 %token IF RETURN ELSE FOR WHILE
 
-(*
+
 /* Precedence and associativity specification */
-%left ADD SUB        /* lowest precedence */
-%left MULT DIV         /* medium precedence */
-%nonassoc NEG        /* highest precedence */
-*)
+%right ASSIGN         /* lowest precedence */
+//%left || 
+//%left && 
+%left EQ NEQ
+%nonassoc GT LT GEQ LEQ
+%left ADD SUB 
+%left MULT DIV MOD
+//%nonassoc ! &
+//%nonassoc LBRACKET    /* highest precedence  */
+
 /* Starting symbol */
 
 %start program
@@ -110,12 +116,13 @@ lexpr: //lexpr -> access
 ;
 
 rexpr:
-    aexpr { $1 }
-  | ID LPAREN params = separated_list(COMMA, expr) RPAREN   { Ast.Call($1, params) } // ((expr COMMA)* expr)?
-  | lexpr ASSIGN expr                                       { Ast.Assign($1, $3) }
+    aexpr                 { $1 }
+  | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
+                          { Ast.Call($1, params) } // ((expr COMMA)* expr)?
+  | lexpr ASSIGN expr     { Ast.Assign($1, $3) }
   //| "!" expr
   //| NEG expr
-/*   | expr binop expr */
+  | expr binop expr       { Ast.BinaryOp($2, $1, $3) }
 ;
 
 aexpr:
@@ -127,22 +134,21 @@ aexpr:
   // | "&" lexpr
 ;
 
-(*
-binop:
-    PLUS
-  | SUB
-  | MULT
-  | MOD
-  | DIV
+%inline binop: // inline because otherwise there are shift/reduce conflicts
+    ADD   { Ast.Add }
+  | SUB   { Ast.Sub }
+  | MULT  { Ast.Mult }
+  | MOD   { Ast.Mod }
+  | DIV   { Ast.Div }
   //| "&&"
   //| "||"
-  | EQ
-  | LT
-  | GT
-  | LEG
-  | GEQ
-  | NEQ
-;*)
+  | EQ    { Ast.Equal }
+  | NEQ   { Ast.Neq }
+  | LT    { Ast.Less }
+  | GT    { Ast.Greater }
+  | LEQ   { Ast.Leq }
+  | GEQ   { Ast.Geq }
+;
 
 (*
 expression:

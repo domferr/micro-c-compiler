@@ -1,8 +1,8 @@
 {
-    open Parser
+	open Parser
 
-    (* Auxiliary definitions *)
-    exception Lexing_error of Location.lexeme_pos * string
+	(* Auxiliary definitions *)
+	exception Lexing_error of Location.lexeme_pos * string
 
 	let create_hashtable size init =
 		let tbl = Hashtbl.create size in
@@ -37,29 +37,29 @@ rule next_token = parse
 	{					
 		match Hashtbl.find_opt keywords_table word with 
 		| Some token 	-> token 
-		| None 			-> ID(word)
+		| None 				-> ID(word)
 	}
-	| "true"			{ BOOLEAN(true) }
-	| "false"			{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
-	| '+'            	{ ADD }
-	| '-'            	{ SUB }
-	| '*'            	{ MULT }
-	| '/'            	{ DIV }
-	| '%'            	{ MOD }
-	| '='            	{ ASSIGN }
-	| '>'            	{ GT }
-	| '<'            	{ LT }
-	| "=="            	{ EQ }
-	| ">="            	{ GEQ }
-	| "<="            	{ LEQ }
-	| "!="            	{ NEQ }
-	| '('            	{ LPAREN }
-	| ')'            	{ RPAREN }
-	| '['            	{ LBRACKET }
-	| ']'            	{ RBRACKET }
-	| '{'            	{ LBRACE }
-	| '}'            	{ RBRACE }
-	| ';'            	{ SEMICOL }
-	| ','            	{ COMMA }
-	| eof            	{ EOF }
+	| "true"		{ BOOLEAN(true) }
+	| "false"		{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
+	| '+'       { ADD }
+	| '-'       { SUB }
+	| '*'       { MULT }
+	| '/'       { DIV }
+	| '%'       { MOD }
+	| '='       { ASSIGN }
+	| '>'       { GT }
+	| '<'       { LT }
+	| "=="      { EQ }
+	| ">="      { GEQ }
+	| "<="      { LEQ }
+	| "!="      { NEQ }
+	| '('       { LPAREN }
+	| ')'       { RPAREN }
+	| '['       { LBRACKET }
+	| ']'       { RBRACKET }
+	| '{'       { LBRACE }
+	| '}'       { RBRACE }
+	| ';'       { SEMICOL }
+	| ','       { COMMA }
+	| eof				{ EOF }
 	| _ 				{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }
