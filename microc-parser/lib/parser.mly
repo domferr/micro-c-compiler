@@ -179,18 +179,3 @@ aexpr:
   | LEQ   { Ast.Leq }
   | GEQ   { Ast.Geq }
 ;
-
-(*
-expression:
-    INTEGER                               { Ast.Prog([]) }
-  | INT ID SEMICOL                        { Ast.Prog([]) }
-  | ID EQ expression SEMICOL              { Ast.Prog([]) }
-  | VOID ID LPAREN INT ID RPAREN LBRACE expression RBRACE                        { Ast.Prog([]) }
-  | INT ID LPAREN RPAREN LBRACE expression RBRACE                        { Ast.Prog([]) }
-  | RETURN expression SEMICOL                          { Ast.Prog([]) }
-  | expression ADD expression        { Ast.Prog([]) } // { $1 + $3 }
-  | expression SUB expression       { Ast.Prog([]) } // { $1 - $3 }
-  | expression MULT expression       { Ast.Prog([]) } // { $1 * $3 }
-  | expression DIV expression         { Ast.Prog([]) } // { $1 / $3 }
-  | SUB expression %prec NEG    { Ast.Prog([]) } // { - $2 }
-;*)
