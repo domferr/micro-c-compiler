@@ -39,11 +39,13 @@ rule next_token = parse
 		| Some token 	-> token 
 		| None 				-> ID(word)
 	}
-	| "true"	{ BOOLEAN(true) }
-	| "false"	{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
-	| '+'       { ADD }
-	| '-'       { SUB }
-	| '*'       { MULT }
+	| "/*"			{ multilinecomment lexbuf }
+	| "//"			{ singlelinecomment lexbuf }
+	| "true"		{ BOOLEAN(true) }
+	| "false"		{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
+	| '+'				{ ADD }
+	| '-'				{ SUB }
+	| '*'				{ MULT }
 	| '/'       { DIV }
 	| '%'       { MOD }
 	| '='       { ASSIGN }
@@ -64,5 +66,16 @@ rule next_token = parse
 	| '}'       { RBRACE }
 	| ';'       { SEMICOL }
 	| ','       { COMMA }
-	| eof		{ EOF }
-	| _ 		{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }
+	| eof				{ EOF }
+	| _ 				{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }
+
+and multilinecomment = parse
+	| "*/"			{ next_token lexbuf }
+	| newline		{ Lexing.new_line lexbuf; multilinecomment lexbuf }
+	| _					{ multilinecomment lexbuf }
+	| eof				{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Multiline comment not closed")) }
+
+and singlelinecomment = parse
+	| newline		{ Lexing.new_line lexbuf; next_token lexbuf }
+	| _					{ singlelinecomment lexbuf }
+	| eof				{ EOF }

@@ -61,6 +61,7 @@
 
   From: http://gallium.inria.fr/~fpottier/X/INF564/html/parser.mly.html   
 *)
+/* Fix for the dangling-else conflict */
 %nonassoc THEN
 %nonassoc ELSE
 
@@ -133,31 +134,32 @@ stmt:
   | expr SEMICOL                  { build_node $loc (Ast.Expr($1)) } // todo it was 'expr?', why?
   | block                         { build_node $loc $1 }
   | WHILE cond = delimited(LPAREN, expr, RPAREN) body = stmt 
-    { build_node $loc (Ast.While(cond, body)) }
-  //| FOR LPAREN init = option(expr) SEMICOL cond = option(expr) SEMICOL incr = option(expr) RPAREN body = stmt  
+    { 
+      build_node $loc (Ast.While(cond, body))
+    }
   | FOR LPAREN init = option(expr) SEMICOL cond = option(expr) SEMICOL incr = option(expr) RPAREN body = stmt  
-  { 
-    let while_body = match incr with 
-      | None    ->  body
-      | Some v  ->  let incr_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
-                    build_node $loc (Ast.Block([
-                      build_node $loc (Ast.Stmt(body));     (* stmt -> stmtordec *)
-                      build_node $loc (Ast.Stmt(incr_stmt)) (* stmt -> stmtordec *)
-                    ]))
-    in
-    let condition = match cond with
-      | None    ->  build_node $loc (Ast.BLiteral(true))
-      | Some v  ->  v
-    in
-    let while_stmt_node = build_node $loc (Ast.While(condition, while_body)) in  (* while -> stmt *)
-    match init with
-      | None    ->  while_stmt_node
-      | Some v  ->  let init_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
-                    build_node $loc (Ast.Block([
-                      build_node $loc (Ast.Stmt(init_stmt));          (* stmt -> stmtordec *)
-                      build_node $loc (Ast.Stmt(while_stmt_node))     (* stmt -> stmtordec *)
-                    ]))
-  }
+    { 
+      let while_body = match incr with 
+        | None    ->  body
+        | Some v  ->  let incr_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
+                      build_node $loc (Ast.Block([
+                        build_node $loc (Ast.Stmt(body));     (* stmt -> stmtordec *)
+                        build_node $loc (Ast.Stmt(incr_stmt)) (* stmt -> stmtordec *)
+                      ]))
+      in
+      let condition = match cond with
+        | None    ->  build_node $loc (Ast.BLiteral(true))
+        | Some v  ->  v
+      in
+      let while_stmt_node = build_node $loc (Ast.While(condition, while_body)) in  (* while -> stmt *)
+      match init with
+        | None    ->  while_stmt_node
+        | Some v  ->  let init_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
+                      build_node $loc (Ast.Block([
+                        build_node $loc (Ast.Stmt(init_stmt));          (* stmt -> stmtordec *)
+                        build_node $loc (Ast.Stmt(while_stmt_node))     (* stmt -> stmtordec *)
+                      ]))
+    }
   | IF LPAREN cond = expr RPAREN then_branch = stmt %prec THEN
     {
       let else_branch = build_node $loc (Ast.Block([])) in
