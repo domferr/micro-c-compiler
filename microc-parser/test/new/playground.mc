@@ -48,3 +48,12 @@ int mixed()
   inside = 10 + foo(10, b);
   return 0 - foo(g);
 }
+
+void empty() {}
+
+bool loop;
+
+while(loop) {
+  int a;
+  a = 10;
+}

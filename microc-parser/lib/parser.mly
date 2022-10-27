@@ -10,7 +10,8 @@
     { loc = Location.to_code_position(l); node = n }
 %}
 
-/* Tokens declarations */
+
+/* ------------------ Tokens declarations ----------------- */
 %token EOF
 %token <string> ID
 %token <int> INTEGER
@@ -28,7 +29,7 @@
 %token IF RETURN ELSE FOR WHILE
 
 
-/* Precedence and associativity specification */
+/* ------ Precedence and associativity specification ------ */
 %right ASSIGN         /* lowest precedence */
 //%left || 
 //%left && 
@@ -40,13 +41,12 @@
 //%nonassoc LBRACKET    /* highest precedence  */
 
 /* Starting symbol */
-
 %start program
 %type <Ast.program> program    /* the parser returns a Ast.program value */
 %%
 
-/* Grammar specification */
 
+/* ---------------- Grammar specification ----------------- */
 program:
     topdecl* EOF                { Ast.Prog($1) }
 ;
@@ -93,12 +93,14 @@ stmtordec:
 ;
 
 stmt:
-    RETURN expr? SEMICOL  { build_annotated_node $loc (Ast.Return($2)) }
-  | expr SEMICOL          { build_annotated_node $loc (Ast.Expr($1)) } // todo it was 'expr?'
-  | block                 { build_annotated_node $loc $1 }
-  // | WHILE LPAREN expr RPAREN stmt { Ast.While(expr, stmt) }
-  // | FOR LPAREN expr? SEMICOL expr? SEMICOL expr? RPAREN stmt
-  // | IF LPAREN expr RPAREN stmt ELSE stmt
+    RETURN expr? SEMICOL          { build_annotated_node $loc (Ast.Return($2)) }
+  | expr SEMICOL                  { build_annotated_node $loc (Ast.Expr($1)) } // todo it was 'expr?', why?
+  | block                         { build_annotated_node $loc $1 }
+  | WHILE LPAREN e = expr RPAREN s = stmt 
+    { build_annotated_node $loc (Ast.While(e, s)) }
+  //| FOR LPAREN expr? SEMICOL expr? SEMICOL expr? RPAREN stmt  {  }
+  | IF LPAREN cond = expr RPAREN then_branch = stmt ELSE else_branch = stmt 
+    { build_annotated_node $loc (Ast.If(cond, then_branch, else_branch)) }
   // | IF LPAREN expr RPAREN stmt
 ;
 
