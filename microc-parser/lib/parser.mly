@@ -59,6 +59,7 @@
 %left ADD SUB 
 %left MULT DIV MOD
 //%nonassoc ! &
+%nonassoc NEG
 //%nonassoc LBRACKET    /* highest precedence  */
 
 /* Starting symbol */
@@ -147,11 +148,11 @@ lexpr: //lexpr -> access
 rexpr:
     aexpr                 { $1 }
   | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
-                          { Ast.Call($1, params) } // ((expr COMMA)* expr)?
-  | lexpr ASSIGN expr     { Ast.Assign($1, $3) }
+                            { Ast.Call($1, params) } // ((expr COMMA)* expr)?
+  | lexpr ASSIGN expr       { Ast.Assign($1, $3) }
   //| "!" expr
-  //| NEG expr
-  | expr binop expr       { Ast.BinaryOp($2, $1, $3) }
+  | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
+  | expr binop expr         { Ast.BinaryOp($2, $1, $3) }
 ;
 
 aexpr:

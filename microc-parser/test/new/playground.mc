@@ -72,3 +72,8 @@ void test_and_or() {
   bool yes;
   yes = a || b;
 }
+
+int main() {
+  int negation;
+  negation = 10 - -8;
+}
