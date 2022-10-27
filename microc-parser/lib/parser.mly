@@ -98,10 +98,10 @@ stmt:
 
 expr:
     lexpr   { build_annotated_node $loc (Ast.Access($1)) }
-  //| rexpr
+  | rexpr   { build_annotated_node $loc $1 }
 ;
 
- lexpr:
+lexpr: //lexpr -> access
     ID                  { build_annotated_node $loc (Ast.AccVar($1)) }
   | LPAREN lexpr RPAREN { $2 }
   // | "*" lexpr
@@ -109,15 +109,15 @@ expr:
   | lexpr LBRACKET expr RBRACKET  { build_annotated_node $loc (Ast.AccIndex($1, $3)) }
 ;
 
-/* rexpr:
-    aexpr
-  | ID LPAREN ((expr COMMA)* expr)? RPAREN
-  | lexpr EQ expr
+rexpr:
+    //aexpr
+    ID LPAREN params = separated_list(COMMA, expr) RPAREN   { Ast.Call($1, params) } // ((expr COMMA)* expr)?
+  | lexpr ASSIGN expr                                       { Ast.Assign($1, $3) }
   //| "!" expr
-  | NEG expr
-  | expr binop expr
+  //| NEG expr
+/*   | expr binop expr */
 ;
-
+(*
 aexpr:
     INTEGER
   // | CHARACTER
@@ -141,7 +141,7 @@ binop:
   | LEG
   | GEQ
   | NEQ
-; */
+;*)
 
 (*
 expression:

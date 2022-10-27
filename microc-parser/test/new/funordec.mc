@@ -3,7 +3,9 @@ int a[];
 void foo(int c)
 {
   int inner;
-  a[inner];
+  int testing;
+  testing = a[inner];
+  a[inner] = c;
   return;
 }
 
