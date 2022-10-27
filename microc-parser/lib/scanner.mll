@@ -45,11 +45,13 @@ rule next_token = parse
 	| '-'            	{ SUB }
 	| '*'            	{ MULT }
 	| '/'            	{ DIV }
+	| '%'            	{ MOD }
 	| '='            	{ EQ }
 	| '>'            	{ GT }
 	| '<'            	{ LT }
 	| ">="            	{ GEQ }
 	| "<="            	{ LEQ }
+	| "!="            	{ NEQ }
 	| '('            	{ LPAREN }
 	| ')'            	{ RPAREN }
 	| '['            	{ LBRACKET }
@@ -57,5 +59,6 @@ rule next_token = parse
 	| '{'            	{ LBRACE }
 	| '}'            	{ RBRACE }
 	| ';'            	{ SEMICOL }
+	| ','            	{ COMMA }
 	| eof            	{ EOF }
 	| _ 				{ raise (Lexing_error((Location.to_lexeme_position lexbuf), "Unexpected character")) }
