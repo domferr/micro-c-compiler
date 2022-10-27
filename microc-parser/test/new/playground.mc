@@ -51,9 +51,11 @@ int mixed()
 
 void empty() {}
 
-bool loop;
+void test_while() {
+  bool loop;
 
-while(loop) {
-  int a;
-  a = 10;
+  while(loop) {
+    int a;
+    a = 10;
+  }
 }
