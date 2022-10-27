@@ -110,23 +110,24 @@ lexpr: //lexpr -> access
 ;
 
 rexpr:
-    //aexpr
-    ID LPAREN params = separated_list(COMMA, expr) RPAREN   { Ast.Call($1, params) } // ((expr COMMA)* expr)?
+    aexpr { $1 }
+  | ID LPAREN params = separated_list(COMMA, expr) RPAREN   { Ast.Call($1, params) } // ((expr COMMA)* expr)?
   | lexpr ASSIGN expr                                       { Ast.Assign($1, $3) }
   //| "!" expr
   //| NEG expr
 /*   | expr binop expr */
 ;
-(*
+
 aexpr:
-    INTEGER
+    INTEGER               { Ast.ILiteral($1) }
   // | CHARACTER
-  | BOOLEAN
-  | NULL
-  | LPAREN rexpr RPAREN
+  | BOOLEAN               { Ast.BLiteral($1) }
+  //| NULL
+  | LPAREN rexpr RPAREN   { $2 }
   // | "&" lexpr
 ;
 
+(*
 binop:
     PLUS
   | SUB
