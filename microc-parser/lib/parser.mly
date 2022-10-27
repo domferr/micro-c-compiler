@@ -16,7 +16,7 @@
 %token <int> INTEGER
 %token <bool> BOOLEAN
 /* Operators */
-%token ADD SUB MULT DIV MOD
+%token ADD SUB MULT DIV MOD ASSIGN
 %token EQ GT LT GEQ LEQ NEQ
 /* Other symbols */
 %token LPAREN RPAREN
@@ -78,7 +78,7 @@ vardesc:
   /* | vardesc LBRACKET INTEGER RBRACKET { $1 } (* todo how can I handle the integer?! *) */
 ;
 
-block:// (stmt | vardecl SEMICOL)*
+block:  // (stmt | vardecl SEMICOL)*
     LBRACE list(stmtordec) RBRACE { Ast.Block($2) }
 ;
 

@@ -46,9 +46,10 @@ rule next_token = parse
 	| '*'            	{ MULT }
 	| '/'            	{ DIV }
 	| '%'            	{ MOD }
-	| '='            	{ EQ }
+	| '='            	{ ASSIGN }
 	| '>'            	{ GT }
 	| '<'            	{ LT }
+	| "=="            	{ EQ }
 	| ">="            	{ GEQ }
 	| "<="            	{ LEQ }
 	| "!="            	{ NEQ }
