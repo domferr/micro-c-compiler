@@ -86,7 +86,7 @@ stmtordec:
   | stmt                  { build_annotated_node $loc (Ast.Stmt($1)) }
 ;
 
-stmt: // todo return stmt_node
+stmt:
     RETURN expr? SEMICOL  { build_annotated_node $loc (Ast.Return($2)) }
   | expr SEMICOL          { build_annotated_node $loc (Ast.Expr($1)) } // todo it was 'expr?'
   | block                 { build_annotated_node $loc $1 }
@@ -99,7 +99,6 @@ stmt: // todo return stmt_node
 expr:
     lexpr   { build_annotated_node $loc (Ast.Access($1)) }
   //| rexpr
-  // | lexpr
 ;
 
  lexpr:
@@ -107,7 +106,7 @@ expr:
   | LPAREN lexpr RPAREN { $2 }
   // | "*" lexpr
   // | "*" aexpr
-  //| lexpr LBRACKET expr RBRACKET
+  | lexpr LBRACKET expr RBRACKET  { build_annotated_node $loc (Ast.AccIndex($1, $3)) }
 ;
 
 /* rexpr:

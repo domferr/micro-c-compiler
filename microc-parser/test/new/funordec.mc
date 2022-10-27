@@ -1,9 +1,9 @@
-int a;
+int a[];
 
 void foo(int c)
 {
   int inner;
-  a;
+  a[inner];
   return;
 }
 
