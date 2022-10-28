@@ -2,6 +2,10 @@ int a[];
 
 void foo(int c)
 {
+  char ch;
+  ch = '';
+  ch = 'd';
+  ch = 'ddddd';
   int inner;
   int testing;
   testing = a[inner];

@@ -28,8 +28,9 @@
 /* ------------------ Tokens declarations ----------------- */
 %token EOF
 %token <string> ID
-%token <int> INTEGER
+%token <int>  INTEGER
 %token <bool> BOOLEAN
+%token <char> CHARACTER
 /* Operators */
 %token ADD SUB MULT DIV MOD ASSIGN
 %token EQ GT LT GEQ LEQ NEQ
@@ -196,7 +197,7 @@ rexpr:
 
 aexpr:
     INTEGER               { Ast.ILiteral($1) }
-  // | CHARACTER
+  | CHARACTER             { Ast.CLiteral($1) }
   | BOOLEAN               { Ast.BLiteral($1) }
   //| NULL
   | LPAREN rexpr RPAREN   { $2 }
