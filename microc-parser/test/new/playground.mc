@@ -2,10 +2,6 @@ int a[];
 
 void foo(int c)
 {
-  char ch;
-  ch = '';
-  ch = 'd';
-  ch = 'ddddd';
   int inner;
   int testing;
   testing = a[inner];
@@ -117,4 +113,15 @@ int test_for(int a) {
     a = a + 10;
     i = i + 1;
   }
+}
+
+void test_chars() {
+  char ch;
+  ch = 'd';
+  ch = '\'';
+  ch = '\b';
+  ch = '\t';
+  ch = '\\';
+  ch = '\r';
+  ch = '\n';
 }
