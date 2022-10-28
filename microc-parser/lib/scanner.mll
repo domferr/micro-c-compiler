@@ -38,14 +38,16 @@
 
 let newline = '\n' | '\r' '\n'
 let letter = ['a'-'z' 'A'-'Z']
-let digit = ['0' - '9']
+let digit = ['0'-'9']
+let hexadecimal = (['a'-'f' 'A'-'F'] | digit) 
+let integer = digit+ | "0x" hexadecimal+
 let identifier = (letter | '_') (letter | digit | '_')*
 
 (* Scanner specification *)
 rule next_token = parse
 	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
 	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
-	| digit+ as lit		{ INTEGER(int_of_string lit) }
+	| integer as lit	{ INTEGER(int_of_string lit) }	(* int_of_string function recognizes hexadecimal notation *)
 	| identifier as word 
 	{	(* identifier or keyword *)
 		match Hashtbl.find_opt keywords_table word with 
@@ -101,5 +103,5 @@ and readchar = parse
 									  Some ch 	-> CHARACTER(ch)
 									| None 		-> raise_error lexbuf "Invalid special character"
 							}
-	| [^ '\''] as c '\''		{ CHARACTER(c) }
-	| _							{ raise_error lexbuf "Invalid character" }
+	| [^ '\''] as c '\''	{ CHARACTER(c) }
+	| _						{ raise_error lexbuf "Character not terminated" }
