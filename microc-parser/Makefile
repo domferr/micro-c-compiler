@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := all
 EXE=microcc
+BUILD_DIR=_build/default/
 
 ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(ARGS):;@:)
@@ -20,7 +21,17 @@ build: ## Build the project, including non installable libraries and executables
 .PHONY: start
 start: all ## Run the produced executable
 	opam exec -- dune exec --root . bin/$(EXE).exe $(ARGS)
-	 
+
+# It updates the file [parserMessages.messages] with new auto-generated
+# comments for all error states.
+.PHONY: update-parser-messages
+update-parser-messages:
+	cp -f lib/parserMessages.messages lib/parserMessages.messages.bak
+	opam exec -- dune exec menhir -- lib/parser.mly \
+	    --update-errors lib/parserMessages.messages \
+	    > lib/parserMessages.updated
+	mv lib/parserMessages.updated lib/parserMessages.messages
+ 
 .PHONY: clean
 clean: ## Clean build artifacts and other generated files
 	opam exec -- dune clean --root .

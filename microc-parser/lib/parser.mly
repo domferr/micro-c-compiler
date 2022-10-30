@@ -25,7 +25,7 @@
 %}
 
 
-/* ------------------ Tokens declarations ----------------- */
+/* ---------------------------- Tokens declarations --------------------------- */
 %token EOF
 %token <string> ID
 %token <int>  INTEGER
@@ -83,9 +83,9 @@
 %%
 
 
-/* ---------------- Grammar specification ----------------- */
+/* -------------------------- Grammar specification --------------------------- */
 program:
-    topdecl* EOF                { Ast.Prog($1) }
+    topdecl* EOF    { Ast.Prog($1) }
 ;
 
 topdecl:

@@ -17,4 +17,3 @@ let () =
 			| Microc.Parsing.Syntax_error (pos, msg) -> 
 					Microc.Errors.report_error "Syntax error" input_channel stdout pos msg;
 					close_in input_channel;
-	
