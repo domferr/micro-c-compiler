@@ -11,17 +11,20 @@ let print_error_lines error_channel sourcecode_channel from_line to_line =
 let max_number_of_lines = 6 (* How many lines of the sourcecode to print before printing the error *)
 
 let report_error header_str file_channel outchan pos msg =
+	let _ = Location.show_lexeme_pos pos in
 	(* Line in which the error occurred *)
 	let error_line = pos.Location.line in
 	let from_line = if (error_line - max_number_of_lines + 1) <= 0 then 1 else error_line - max_number_of_lines + 1 in
 	(* Start reading the channel again from the beginning *)
-	let _ = seek_in file_channel 0 in
+	seek_in file_channel 0;
 	(* Finally print error lines *)
 	print_error_lines outchan file_channel from_line error_line;
 	(* Create a string with number of spaces from the beginning of the line to the error column *)
 	let space_before_arrows = String.make (pos.Location.start_column - 1) ' ' in
 	(* Create a string with number of '^' arrows from the error's beginning column to the error's end column *)
-	let error_arrows = String.make (pos.Location.end_column - pos.Location.start_column + 1) '^' in
+	let arrows_quantity = if pos.Location.start_column > pos.Location.end_column then 1 
+												else pos.Location.end_column - pos.Location.start_column + 1 in
+	let error_arrows = String.make arrows_quantity '^' in
 	let bottom_header_space = String.make ((String.length header_str) + 2) ' ' in
 	(* Finally print the error to the output channel *)
 	Printf.fprintf outchan "%s\027[1;31m%s\027[0m\n" space_before_arrows error_arrows;

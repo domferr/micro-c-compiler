@@ -89,7 +89,7 @@ program: BOOL ID WHILE
 ## typ ID
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+';' expected
 
 program: BOOL ID LPAREN WHILE
 ##
@@ -157,7 +157,7 @@ program: BOOL ID LBRACKET RBRACKET WHILE
 ## typ vardesc
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+variable declaration with initialization is not allowed
 
 program: BOOL ID LPAREN RPAREN WHILE
 ##
@@ -1262,7 +1262,7 @@ program: BOOL ID LPAREN RPAREN LBRACE LBRACE RBRACE THEN
 ## stmtordec
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+'}' expected
 
 program: BOOL ID SEMICOL WHILE
 ##
