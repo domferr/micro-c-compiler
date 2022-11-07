@@ -13,7 +13,7 @@
 		tbl
 	
 	let keywords_table =
-		create_hashtable 9 [
+		create_hashtable 10 [
 			("int", 	INT);
 			("char", 	CHAR);
 			("bool", 	BOOL);
@@ -22,6 +22,7 @@
 			("else", 	ELSE);
 			("for", 	FOR);
 			("while", 	WHILE);
+			("do", 		DO);
 			("return", 	RETURN)
 		]
 	
