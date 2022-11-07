@@ -93,6 +93,10 @@ topdecl:
     { 
       build_node $loc (Ast.Vardec( fst v, snd v )) 
     }
+  // | typ vars = separated_list(COMMA, vardesc) SEMICOL
+  //   {
+      
+  //   }
   | typ ID LPAREN form = separated_list(COMMA, vardecl) RPAREN b = block 
     { 
       let block_node = build_node $loc b in 
@@ -189,6 +193,15 @@ rexpr:
     aexpr                   { $1 }
   | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
                             { Ast.Call($1, params) } // ((expr COMMA)* expr)?
+  /*| lexpr binop ASSIGN expr { 
+                              let left = match $1 with
+                                  id         -> Ast.BinaryOp($2, id, $4)
+                                | e        -> Ast.BinaryOp($2, e, $4)
+                                | acc, _  -> let access_node = build_node $loc Ast.Access(acc)
+                                                       in Ast.BinaryOp($2, access_node, $4)
+                              in let op_node = build_node $loc left
+                              in Ast.Assign($1, op_node)
+                            } */
   | lexpr ASSIGN expr       { Ast.Assign($1, $3) }
   | NOT e = expr            { Ast.UnaryOp(Ast.Not, e) }
   | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
