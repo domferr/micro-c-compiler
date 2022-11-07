@@ -93,7 +93,7 @@ topdecl:
     { 
       build_node $loc (Ast.Vardec( fst v, snd v )) 
     }
-  | typ ID LPAREN form = separated_list(COMMA, vardecl) RPAREN b = block 
+  | return_typ ID LPAREN form = separated_list(COMMA, vardecl) RPAREN b = block 
     { 
       let block_node = build_node $loc b in 
       build_node $loc (Ast.Fundecl{ 
@@ -105,8 +105,12 @@ topdecl:
 typ:
     INT   { Ast.TypI }
   | CHAR  { Ast.TypC }
-  | VOID  { Ast.TypV }
   | BOOL  { Ast.TypB }
+;
+
+%inline return_typ:
+    VOID  { Ast.TypV }
+  | typ   { $1 }
 ;
 
 vardecl:
