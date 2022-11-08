@@ -70,31 +70,31 @@ rule next_token = parse
   | "=="                { EQ }
   | ">="                { GEQ }
   | "<="                { LEQ }
-  | "!="      				  { NEQ }
-  | "&&"      				  { AND }
-  | "||"      				  { OR }
-  | "!"      					  { NOT }
-  | '('       				  { LPAREN }
-  | ')'       				  { RPAREN }
-  | '['       				  { LBRACKET }
-  | ']'       				  { RBRACKET }
-  | '{'       				  { LBRACE }
-  | '}'       				  { RBRACE }
-  | ';'       				  { SEMICOL }
-  | ','       				  { COMMA }
-  | eof								  { EOF }
-  | _									  { raise_error lexbuf  "Unexpected character" }
+  | "!="                { NEQ }
+  | "&&"                { AND }
+  | "||"                { OR }
+  | "!"                 { NOT }
+  | '('                 { LPAREN }
+  | ')'                 { RPAREN }
+  | '['                 { LBRACKET }
+  | ']'                 { RBRACKET }
+  | '{'                 { LBRACE }
+  | '}'                 { RBRACE }
+  | ';'                 { SEMICOL }
+  | ','                 { COMMA }
+  | eof                 { EOF }
+  | _                   { raise_error lexbuf  "Unexpected character" }
 
 and multilinecomment = parse
-  | "*/"							  { next_token lexbuf }
-  | newline						  { Lexing.new_line lexbuf; multilinecomment lexbuf }
-  | _									  { multilinecomment lexbuf }
-  | eof								  { raise_error lexbuf "Multiline comment not closed" }
+  | "*/"                { next_token lexbuf }
+  | newline             { Lexing.new_line lexbuf; multilinecomment lexbuf }
+  | _                   { multilinecomment lexbuf }
+  | eof                 { raise_error lexbuf "Multiline comment not closed" }
 
 and singlelinecomment = parse
-  | newline						  { Lexing.new_line lexbuf; next_token lexbuf }
-  | _									  { singlelinecomment lexbuf }
-  | eof								  { EOF }
+  | newline             { Lexing.new_line lexbuf; next_token lexbuf }
+  | _                   { singlelinecomment lexbuf }
+  | eof                 { EOF }
 
 and readchar = parse
     "'"                 { raise_error lexbuf "Missing character between single quotes" }
