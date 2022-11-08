@@ -27,13 +27,13 @@
 	
 	(* special characters are \', \b, \f, \t, \\, \r, and \n *)
 	let to_special_character c = match c with
-		  'b'	-> Some '\b'
-		| 't'	-> Some '\t'
+		  'b'		-> Some '\b'
+		| 't'		-> Some '\t'
 		| '\\'	-> Some '\\'
-		| 'r'	-> Some '\r'
-		| 'n'	-> Some '\n'
+		| 'r'		-> Some '\r'
+		| 'n'		-> Some '\n'
 		| '\'' 	-> Some '\''
-		| _ 	-> None
+		| _ 		-> None
 }
 
 let newline = '\n' | '\r' '\n'
@@ -45,63 +45,63 @@ let identifier = (letter | '_') (letter | digit | '_')*
 
 (* Scanner specification *)
 rule next_token = parse
-	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
-	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
-	| integer as lit	{ INTEGER(int_of_string lit) }	(* int_of_string function recognizes hexadecimal notation *)
+	  [' ' '\t']+					{ next_token lexbuf }	(* ignore and skip whitespace *)
+	| newline							{ Lexing.new_line lexbuf; next_token lexbuf }
+	| integer as lit			{ INTEGER(int_of_string lit) }	(* int_of_string function recognizes hexadecimal notation *)
 	| identifier as word 
-	{	(* identifier or keyword *)
-		match Hashtbl.find_opt keywords_table word with 
-		| Some token	-> token 
-		| None			-> ID(word)
-	}
-	| "/*"		{ multilinecomment lexbuf }
-	| "//"		{ singlelinecomment lexbuf }
-	| "'" 		{ readchar lexbuf }
-	| "true"	{ BOOLEAN(true) }
-	| "false"	{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
-	| '+'		{ ADD }
-	| '-'		{ SUB }
-	| '*'		{ MULT }
-	| '/'       { DIV }
-	| '%'       { MOD }
-	| '='       { ASSIGN }
-	| '>'       { GT }
-	| '<'       { LT }
-	| "=="      { EQ }
-	| ">="      { GEQ }
-	| "<="      { LEQ }
-	| "!="      { NEQ }
-	| "&&"      { AND }
-	| "||"      { OR }
-	| "!"      	{ NOT }
-	| '('       { LPAREN }
-	| ')'       { RPAREN }
-	| '['       { LBRACKET }
-	| ']'       { RBRACKET }
-	| '{'       { LBRACE }
-	| '}'       { RBRACE }
-	| ';'       { SEMICOL }
-	| ','       { COMMA }
-	| eof		{ EOF }
-	| _			{ raise_error lexbuf  "Unexpected character" }
+												{	(* identifier or keyword *)
+													match Hashtbl.find_opt keywords_table word with 
+													| Some token	-> token 
+													| None			-> ID(word)
+												}
+	| "/*"								{ multilinecomment lexbuf }
+	| "//"								{ singlelinecomment lexbuf }
+	| "'" 								{ readchar lexbuf }
+	| "true"							{ BOOLEAN(true) }
+	| "false"							{ BOOLEAN(false) } (* todo maybe true and false are keywords *)
+	| '+'									{ ADD }
+	| '-'									{ SUB }
+	| '*'									{ MULT }
+	| '/'       					{ DIV }
+	| '%'       					{ MOD }
+	| '='       					{ ASSIGN }
+	| '>'      						{ GT }
+	| '<'       					{ LT }
+	| "=="      					{ EQ }
+	| ">="      					{ GEQ }
+	| "<="      					{ LEQ }
+	| "!="      					{ NEQ }
+	| "&&"      					{ AND }
+	| "||"      					{ OR }
+	| "!"      						{ NOT }
+	| '('       					{ LPAREN }
+	| ')'       					{ RPAREN }
+	| '['       					{ LBRACKET }
+	| ']'       					{ RBRACKET }
+	| '{'       					{ LBRACE }
+	| '}'       					{ RBRACE }
+	| ';'       					{ SEMICOL }
+	| ','       					{ COMMA }
+	| eof									{ EOF }
+	| _										{ raise_error lexbuf  "Unexpected character" }
 
 and multilinecomment = parse
-	| "*/"			{ next_token lexbuf }
-	| newline		{ Lexing.new_line lexbuf; multilinecomment lexbuf }
-	| _				{ multilinecomment lexbuf }
-	| eof			{ raise_error lexbuf "Multiline comment not closed" }
+	| "*/"								{ next_token lexbuf }
+	| newline							{ Lexing.new_line lexbuf; multilinecomment lexbuf }
+	| _										{ multilinecomment lexbuf }
+	| eof									{ raise_error lexbuf "Multiline comment not closed" }
 
 and singlelinecomment = parse
-	| newline		{ Lexing.new_line lexbuf; next_token lexbuf }
-	| _				{ singlelinecomment lexbuf }
-	| eof			{ EOF }
+	| newline							{ Lexing.new_line lexbuf; next_token lexbuf }
+	| _										{ singlelinecomment lexbuf }
+	| eof									{ EOF }
 
 and readchar = parse
-	  "'"					{ raise_error lexbuf "Missing character between single quotes" }
+	  "'"									{ raise_error lexbuf "Missing character between single quotes" }
 	| '\\' (_ as c) '\''	{ 
-								match to_special_character(c) with
-									  Some ch 	-> CHARACTER(ch)
-									| None 		-> raise_error lexbuf "Invalid special character"
-							}
+													match to_special_character(c) with
+															Some ch 	-> CHARACTER(ch)
+														| None 		-> raise_error lexbuf "Invalid special character"
+												}
 	| [^ '\''] as c '\''	{ CHARACTER(c) }
-	| _						{ raise_error lexbuf "Character not terminated" }
+	| _										{ raise_error lexbuf "Character not terminated" }
