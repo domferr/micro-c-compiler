@@ -54,8 +54,8 @@ rule next_token = parse
                           | Some token	-> token 
                           | None			-> ID(word)
                         }
-  | "/*"								{ multilinecomment lexbuf }
-  | "//"								{ singlelinecomment lexbuf }
+  | "/*"                { multilinecomment lexbuf }
+  | "//"                { singlelinecomment lexbuf }
   | "'" 								{ readchar lexbuf }
   | "true"							{ BOOLEAN(true) }
   | "false"							{ BOOLEAN(false) } (* todo maybe true and false are keywords *)
