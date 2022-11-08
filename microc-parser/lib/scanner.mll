@@ -62,14 +62,14 @@ rule next_token = parse
   | '+'                 { ADD }
   | '-'                 { SUB }
   | '*'                 { MULT }
-  | '/'       				  { DIV }
-  | '%'       				  { MOD }
-  | '='       				  { ASSIGN }
-  | '>'      					  { GT }
-  | '<'       				  { LT }
-  | "=="      				  { EQ }
-  | ">="      				  { GEQ }
-  | "<="      				  { LEQ }
+  | '/'                 { DIV }
+  | '%'                 { MOD }
+  | '='                 { ASSIGN }
+  | '>'                 { GT }
+  | '<'                 { LT }
+  | "=="                { EQ }
+  | ">="                { GEQ }
+  | "<="                { LEQ }
   | "!="      				  { NEQ }
   | "&&"      				  { AND }
   | "||"      				  { OR }
@@ -97,11 +97,11 @@ and singlelinecomment = parse
   | eof								  { EOF }
 
 and readchar = parse
-    "'"								  { raise_error lexbuf "Missing character between single quotes" }
+    "'"                 { raise_error lexbuf "Missing character between single quotes" }
   | '\\' (_ as c) '\''  { 
                           match to_special_character(c) with
-                              Some ch 	-> CHARACTER(ch)
-                            | None 		-> raise_error lexbuf "Invalid special character"
+                              Some ch -> CHARACTER(ch)
+                            | None    -> raise_error lexbuf "Invalid special character"
                         }
   | [^ '\''] as c '\''  { CHARACTER(c) }
-  | _									  { raise_error lexbuf "Character not terminated" }
+  | _                   { raise_error lexbuf "Character not terminated" }
