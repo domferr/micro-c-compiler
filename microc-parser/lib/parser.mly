@@ -193,15 +193,15 @@ rexpr:
     aexpr                   { $1 }
   | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
                             { Ast.Call($1, params) } // ((expr COMMA)* expr)?
-  /*| lexpr binop ASSIGN expr { 
+  | lexpr binop ASSIGN expr { 
                               let left = match $1 with
-                                  id         -> Ast.BinaryOp($2, id, $4)
-                                | e        -> Ast.BinaryOp($2, e, $4)
+                                  id      -> Ast.BinaryOp($2, id, $4) (* x += expr *)
+                                | e       -> Ast.BinaryOp($2, e, $4)  (* expr += expr *)
                                 | acc, _  -> let access_node = build_node $loc Ast.Access(acc)
-                                                       in Ast.BinaryOp($2, access_node, $4)
+                                              in Ast.BinaryOp($2, access_node, $4)
                               in let op_node = build_node $loc left
                               in Ast.Assign($1, op_node)
-                            } */
+                            }
   | lexpr ASSIGN expr       { Ast.Assign($1, $3) }
   | NOT e = expr            { Ast.UnaryOp(Ast.Not, e) }
   | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
