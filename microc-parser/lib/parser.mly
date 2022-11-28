@@ -114,15 +114,15 @@ typ:
 ;
 
 vardecl:
-    typ vardesc { ($1, $2) }
+    typ vardesc       { ($1, $2) }
+  | typ MULT vardesc  { (Ast.TypP($1), $3) }
   | typ vardesc LBRACKET INTEGER RBRACKET { (Ast.TypA($1, Some $4), $2) }
 ;
 
 vardesc:
     ID                                { $1 }
-  (*| "*" Vardesc *)
   | LPAREN vardesc RPAREN             { $2 }
-  | vardesc LBRACKET RBRACKET         { $1 }
+  | vardesc LBRACKET RBRACKET         { $1 } /* todo: can I declare an array without a size? */
 ;
 
 block:  // (stmt | vardecl SEMICOL)*
