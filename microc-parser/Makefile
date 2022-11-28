@@ -1,6 +1,8 @@
 .DEFAULT_GOAL := all
 EXE=microcc
 BUILD_DIR=_build/default/
+TESTDIR=test/samples
+TEST_SOURCES := $(wildcard $(TESTDIR)/*.mc)
 
 ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(ARGS):;@:)
@@ -55,3 +57,8 @@ watch: ## Watch for the filesystem and rebuild on every change
 .PHONY: utop
 utop: ## Run a REPL and link with the project's libraries
 	opam exec -- dune utop --root . lib -- -implicit-bindings
+
+.PHONY: test-parser
+test-parser: ## Test all the test sources
+	@./tester.sh ${TEST_SOURCES}
+	
