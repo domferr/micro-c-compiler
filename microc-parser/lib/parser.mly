@@ -115,6 +115,7 @@ typ:
 
 vardecl:
     typ vardesc { ($1, $2) }
+  | typ vardesc LBRACKET INTEGER RBRACKET { (Ast.TypA($1, Some $4), $2) }
 ;
 
 vardesc:
@@ -122,7 +123,6 @@ vardesc:
   (*| "*" Vardesc *)
   | LPAREN vardesc RPAREN             { $2 }
   | vardesc LBRACKET RBRACKET         { $1 }
-  /* | vardesc LBRACKET INTEGER RBRACKET { $1 } (* todo how can I handle the integer?! *) */
 ;
 
 block:  // (stmt | vardecl SEMICOL)*
