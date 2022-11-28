@@ -40,6 +40,7 @@
 %token LBRACE RBRACE
 %token LBRACKET RBRACKET
 %token SEMICOL COMMA
+%token AMPERSAND
 /* Keywords */
 %token INT CHAR VOID BOOL NULL
 %token IF RETURN THEN ELSE FOR WHILE
@@ -73,9 +74,9 @@
 %nonassoc GT LT GEQ LEQ
 %left ADD SUB 
 %left MULT DIV MOD
-%nonassoc NOT // &
+%nonassoc NOT //AMPERSAND
 %nonassoc NEG
-//%nonassoc LBRACKET    /* highest precedence  */
+%nonassoc LBRACKET    /* highest precedence  */
 
 /* Starting symbol */
 %start program
@@ -114,9 +115,10 @@ typ:
 ;
 
 vardecl:
-    typ vardesc       { ($1, $2) }
-  | typ MULT vardesc  { (Ast.TypP($1), $3) }
-  | typ vardesc LBRACKET INTEGER RBRACKET { (Ast.TypA($1, Some $4), $2) }
+    typ vardesc           { ($1, $2) }
+  | typ MULT vardesc      { (Ast.TypP($1), $3) }
+  | typ vardesc LBRACKET INTEGER RBRACKET 
+                          { (Ast.TypA($1, Some $4), $2) }
 ;
 
 vardesc:
@@ -183,16 +185,19 @@ expr:
 
 lexpr:
     ID                            { build_node $loc (Ast.AccVar($1)) }
-  | LPAREN e = lexpr RPAREN       { e }
-  // | "*" lexpr
-  // | "*" aexpr
+  | LPAREN lexpr RPAREN           { $2 }
+  | MULT lexpr                    { 
+                                    let acc = build_node $loc (Ast.Access($2)) in
+                                    build_node $loc (Ast.AccDeref(acc))
+                                  }
+  //| "*" aexpr
   | lexpr LBRACKET expr RBRACKET  { build_node $loc (Ast.AccIndex($1, $3)) }
 ;
 
 rexpr:
     aexpr                   { $1 }
-  | ID LPAREN params = separated_list(COMMA, expr) RPAREN   
-                            { Ast.Call($1, params) } // ((expr COMMA)* expr)?
+  | ID LPAREN params = separated_list(COMMA, expr) RPAREN // ((expr COMMA)* expr)?
+                            { Ast.Call($1, params) }
   | lexpr ASSIGN expr       { Ast.Assign($1, $3) }
   | NOT e = expr            { Ast.UnaryOp(Ast.Not, e) }
   | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
@@ -205,7 +210,7 @@ aexpr:
   | BOOLEAN               { Ast.BLiteral($1) }
   //| NULL
   | LPAREN rexpr RPAREN   { $2 }
-  // | "&" lexpr
+  | AMPERSAND lexpr       { Ast.Addr($2) }
 ;
 
 %inline binop: // inline because otherwise there are shift/reduce conflicts

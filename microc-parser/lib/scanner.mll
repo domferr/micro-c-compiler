@@ -82,6 +82,7 @@ rule next_token = parse
 	| '}'       { RBRACE }
 	| ';'       { SEMICOL }
 	| ','       { COMMA }
+	| '&'		{ AMPERSAND }
 	| eof		{ EOF }
 	| _			{ raise_error lexbuf  "Unexpected character" }
 
