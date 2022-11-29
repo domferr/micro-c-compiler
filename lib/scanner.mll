@@ -58,7 +58,7 @@ rule next_token = parse
 	| "//"		{ singlelinecomment lexbuf }
 	| "'" 		{ readchar lexbuf }
 	| "true"	{ BOOLEAN(true) }
-	| "false"	{ BOOLEAN(false) } (* todo maybe true and alse are keywords *)
+	| "false"	{ BOOLEAN(false) }
 	| '+'		{ ADD }
 	| '-'		{ SUB }
 	| '*'		{ MULT }
