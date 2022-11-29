@@ -115,16 +115,15 @@ typ:
 ;
 
 vardecl:
-    typ vardesc           { ($1, $2) }
-  | typ MULT vardesc      { (Ast.TypP($1), $3) }
-  | typ vardesc LBRACKET INTEGER RBRACKET 
-                          { (Ast.TypA($1, Some $4), $2) }
+    typ vardesc           { ((fst $2) $1, snd $2) }
 ;
 
 vardesc:
-    ID                                { $1 }
+    ID                                { ((fun t -> t), $1) }
+  | MULT vardesc                      { ((fun t -> fst $2 (Ast.TypP(t))), snd $2 ) }
   | LPAREN vardesc RPAREN             { $2 }
-  | vardesc LBRACKET RBRACKET         { $1 } /* todo: can I declare an array without a size? */
+  | vardesc LBRACKET integer=option(INTEGER) RBRACKET /* todo: can I declare an array without a size? */
+                                      { ((fun t -> fst $1 (Ast.TypA(t, integer))), snd $1 ) } 
 ;
 
 block:  // (stmt | vardecl SEMICOL)*

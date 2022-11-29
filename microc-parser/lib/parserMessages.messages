@@ -60,7 +60,7 @@ program: BOOL ID LPAREN BOOL ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 18, spurious reduction of production vardecl -> typ vardesc
+## In state 20, spurious reduction of production vardecl -> typ vardesc
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -82,8 +82,6 @@ program: BOOL ID LPAREN BOOL WHILE
 ## Ends in an error in state: 9.
 ##
 ## vardecl -> typ . vardesc [ SEMICOL RPAREN COMMA ]
-## vardecl -> typ . MULT vardesc [ SEMICOL RPAREN COMMA ]
-## vardecl -> typ . vardesc LBRACKET INTEGER RBRACKET [ SEMICOL RPAREN COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ
@@ -95,10 +93,10 @@ program: BOOL MULT WHILE
 ##
 ## Ends in an error in state: 10.
 ##
-## vardecl -> typ MULT . vardesc [ SEMICOL RPAREN COMMA ]
+## vardesc -> MULT . vardesc [ SEMICOL RPAREN LBRACKET COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## typ MULT
+## MULT
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -115,12 +113,12 @@ program: BOOL LPAREN WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL LPAREN ID WHILE
+program: BOOL LPAREN ID SEMICOL
 ##
 ## Ends in an error in state: 13.
 ##
 ## vardesc -> LPAREN vardesc . RPAREN [ SEMICOL RPAREN LBRACKET COMMA ]
-## vardesc -> vardesc . LBRACKET RBRACKET [ RPAREN LBRACKET ]
+## vardesc -> vardesc . LBRACKET option(INTEGER) RBRACKET [ RPAREN LBRACKET ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAREN vardesc
@@ -128,11 +126,11 @@ program: BOOL LPAREN ID WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL LPAREN ID LBRACKET WHILE
+program: BOOL ID LBRACKET WHILE
 ##
 ## Ends in an error in state: 15.
 ##
-## vardesc -> vardesc LBRACKET . RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
+## vardesc -> vardesc LBRACKET . option(INTEGER) RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## vardesc LBRACKET
@@ -140,26 +138,37 @@ program: BOOL LPAREN ID LBRACKET WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL MULT ID WHILE
+program: BOOL ID LBRACKET INTEGER WHILE
 ##
 ## Ends in an error in state: 17.
 ##
-## vardecl -> typ MULT vardesc . [ SEMICOL RPAREN COMMA ]
-## vardesc -> vardesc . LBRACKET RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
+## vardesc -> vardesc LBRACKET option(INTEGER) . RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
 ##
 ## The known suffix of the stack is as follows:
-## typ MULT vardesc
+## vardesc LBRACKET option(INTEGER)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL MULT ID WHILE
+##
+## Ends in an error in state: 19.
+##
+## vardesc -> MULT vardesc . [ SEMICOL RPAREN LBRACKET COMMA ]
+## vardesc -> vardesc . LBRACKET option(INTEGER) RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
+##
+## The known suffix of the stack is as follows:
+## MULT vardesc
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LBRACKET RBRACKET WHILE
 ##
-## Ends in an error in state: 18.
+## Ends in an error in state: 20.
 ##
 ## vardecl -> typ vardesc . [ SEMICOL RPAREN COMMA ]
-## vardecl -> typ vardesc . LBRACKET INTEGER RBRACKET [ SEMICOL RPAREN COMMA ]
-## vardesc -> vardesc . LBRACKET RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
+## vardesc -> vardesc . LBRACKET option(INTEGER) RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ vardesc
@@ -167,34 +176,9 @@ program: BOOL ID LBRACKET RBRACKET WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL ID LBRACKET WHILE
-##
-## Ends in an error in state: 19.
-##
-## vardecl -> typ vardesc LBRACKET . INTEGER RBRACKET [ SEMICOL RPAREN COMMA ]
-## vardesc -> vardesc LBRACKET . RBRACKET [ SEMICOL RPAREN LBRACKET COMMA ]
-##
-## The known suffix of the stack is as follows:
-## typ vardesc LBRACKET
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: BOOL ID LBRACKET INTEGER WHILE
-##
-## Ends in an error in state: 20.
-##
-## vardecl -> typ vardesc LBRACKET INTEGER . RBRACKET [ SEMICOL RPAREN COMMA ]
-##
-## The known suffix of the stack is as follows:
-## typ vardesc LBRACKET INTEGER
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 program: VOID ID LPAREN RPAREN WHILE
 ##
-## Ends in an error in state: 25.
+## Ends in an error in state: 24.
 ##
 ## topdecl -> VOID ID LPAREN loption(separated_nonempty_list(COMMA,vardecl)) RPAREN . block [ VOID INT EOF CHAR BOOL ]
 ##
@@ -206,7 +190,7 @@ program: VOID ID LPAREN RPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE VOID
 ##
-## Ends in an error in state: 26.
+## Ends in an error in state: 25.
 ##
 ## block -> LBRACE . list(stmtordec) RBRACE [ WHILE VOID SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR EOF ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -218,7 +202,7 @@ program: BOOL ID LPAREN RPAREN LBRACE VOID
 
 program: BOOL ID LPAREN RPAREN LBRACE WHILE WHILE
 ##
-## Ends in an error in state: 27.
+## Ends in an error in state: 26.
 ##
 ## stmt -> WHILE . LPAREN expr RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -230,7 +214,7 @@ program: BOOL ID LPAREN RPAREN LBRACE WHILE WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE WHILE LPAREN WHILE
 ##
-## Ends in an error in state: 28.
+## Ends in an error in state: 27.
 ##
 ## stmt -> WHILE LPAREN . expr RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -242,7 +226,7 @@ program: BOOL ID LPAREN RPAREN LBRACE WHILE LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE SUB WHILE
 ##
-## Ends in an error in state: 29.
+## Ends in an error in state: 28.
 ##
 ## rexpr -> SUB . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -254,7 +238,7 @@ program: BOOL ID LPAREN RPAREN LBRACE SUB WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE NOT WHILE
 ##
-## Ends in an error in state: 30.
+## Ends in an error in state: 29.
 ##
 ## rexpr -> NOT . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -266,7 +250,7 @@ program: BOOL ID LPAREN RPAREN LBRACE NOT WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE MULT WHILE
 ##
-## Ends in an error in state: 31.
+## Ends in an error in state: 30.
 ##
 ## lexpr -> MULT . lexpr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ##
@@ -278,7 +262,7 @@ program: BOOL ID LPAREN RPAREN LBRACE MULT WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND LPAREN WHILE
 ##
-## Ends in an error in state: 32.
+## Ends in an error in state: 31.
 ##
 ## lexpr -> LPAREN . lexpr RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ##
@@ -290,7 +274,7 @@ program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND LPAREN ID SUB
 ##
-## Ends in an error in state: 34.
+## Ends in an error in state: 33.
 ##
 ## lexpr -> LPAREN lexpr . RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ## lexpr -> lexpr . LBRACKET expr RBRACKET [ RPAREN LBRACKET ]
@@ -303,7 +287,7 @@ program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND LPAREN ID SUB
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LBRACKET WHILE
 ##
-## Ends in an error in state: 36.
+## Ends in an error in state: 35.
 ##
 ## lexpr -> lexpr LBRACKET . expr RBRACKET [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ##
@@ -315,7 +299,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LBRACKET WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE LPAREN WHILE
 ##
-## Ends in an error in state: 37.
+## Ends in an error in state: 36.
 ##
 ## aexpr -> LPAREN . rexpr RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## lexpr -> LPAREN . lexpr RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
@@ -328,7 +312,7 @@ program: BOOL ID LPAREN RPAREN LBRACE LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID WHILE
 ##
-## Ends in an error in state: 39.
+## Ends in an error in state: 38.
 ##
 ## lexpr -> ID . [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ## rexpr -> ID . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -341,7 +325,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LPAREN WHILE
 ##
-## Ends in an error in state: 40.
+## Ends in an error in state: 39.
 ##
 ## rexpr -> ID LPAREN . loption(separated_nonempty_list(COMMA,expr)) RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -353,7 +337,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND WHILE
 ##
-## Ends in an error in state: 43.
+## Ends in an error in state: 42.
 ##
 ## aexpr -> AMPERSAND . lexpr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -365,7 +349,7 @@ program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND ID ASSIGN
 ##
-## Ends in an error in state: 44.
+## Ends in an error in state: 43.
 ##
 ## aexpr -> AMPERSAND lexpr . [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## lexpr -> lexpr . LBRACKET expr RBRACKET [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA AND ADD ]
@@ -378,7 +362,7 @@ program: BOOL ID LPAREN RPAREN LBRACE AMPERSAND ID ASSIGN
 
 program: BOOL ID LPAREN RPAREN LBRACE LPAREN ID RPAREN WHILE
 ##
-## Ends in an error in state: 49.
+## Ends in an error in state: 48.
 ##
 ## expr -> lexpr . [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## lexpr -> lexpr . LBRACKET expr RBRACKET [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
@@ -392,7 +376,7 @@ program: BOOL ID LPAREN RPAREN LBRACE LPAREN ID RPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID ASSIGN WHILE
 ##
-## Ends in an error in state: 50.
+## Ends in an error in state: 49.
 ##
 ## rexpr -> lexpr ASSIGN . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -404,7 +388,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID ASSIGN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID ASSIGN BOOLEAN WHILE
 ##
-## Ends in an error in state: 51.
+## Ends in an error in state: 50.
 ##
 ## rexpr -> lexpr ASSIGN expr . [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -429,7 +413,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID ASSIGN BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID SUB WHILE
 ##
-## Ends in an error in state: 52.
+## Ends in an error in state: 51.
 ##
 ## rexpr -> expr SUB . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -441,7 +425,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID SUB WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID SUB BOOLEAN WHILE
 ##
-## Ends in an error in state: 53.
+## Ends in an error in state: 52.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -466,7 +450,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID SUB BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID MULT WHILE
 ##
-## Ends in an error in state: 54.
+## Ends in an error in state: 53.
 ##
 ## rexpr -> expr MULT . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -478,7 +462,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID MULT WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID MOD WHILE
 ##
-## Ends in an error in state: 57.
+## Ends in an error in state: 56.
 ##
 ## rexpr -> expr MOD . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -490,7 +474,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID MOD WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID DIV WHILE
 ##
-## Ends in an error in state: 59.
+## Ends in an error in state: 58.
 ##
 ## rexpr -> expr DIV . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -502,7 +486,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID DIV WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID OR WHILE
 ##
-## Ends in an error in state: 61.
+## Ends in an error in state: 60.
 ##
 ## rexpr -> expr OR . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -514,7 +498,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID OR WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID OR BOOLEAN WHILE
 ##
-## Ends in an error in state: 62.
+## Ends in an error in state: 61.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -539,7 +523,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID OR BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID NEQ WHILE
 ##
-## Ends in an error in state: 63.
+## Ends in an error in state: 62.
 ##
 ## rexpr -> expr NEQ . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -551,7 +535,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID NEQ WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID NEQ BOOLEAN WHILE
 ##
-## Ends in an error in state: 64.
+## Ends in an error in state: 63.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -576,7 +560,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID NEQ BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LT WHILE
 ##
-## Ends in an error in state: 65.
+## Ends in an error in state: 64.
 ##
 ## rexpr -> expr LT . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -588,7 +572,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LT WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LT ID LT
 ##
-## Ends in an error in state: 66.
+## Ends in an error in state: 65.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -612,15 +596,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LT ID LT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE ID ADD WHILE
 ##
-## Ends in an error in state: 67.
+## Ends in an error in state: 66.
 ##
 ## rexpr -> expr ADD . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -632,7 +616,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID ADD WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID ADD BOOLEAN WHILE
 ##
-## Ends in an error in state: 68.
+## Ends in an error in state: 67.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr ADD expr . [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -657,7 +641,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID ADD BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LEQ WHILE
 ##
-## Ends in an error in state: 69.
+## Ends in an error in state: 68.
 ##
 ## rexpr -> expr LEQ . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -669,7 +653,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LEQ WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LEQ ID LT
 ##
-## Ends in an error in state: 70.
+## Ends in an error in state: 69.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -693,15 +677,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LEQ ID LT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE ID GT WHILE
 ##
-## Ends in an error in state: 71.
+## Ends in an error in state: 70.
 ##
 ## rexpr -> expr GT . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -713,7 +697,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID GT WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID GT ID LT
 ##
-## Ends in an error in state: 72.
+## Ends in an error in state: 71.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -737,15 +721,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID GT ID LT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE ID GEQ WHILE
 ##
-## Ends in an error in state: 73.
+## Ends in an error in state: 72.
 ##
 ## rexpr -> expr GEQ . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -757,7 +741,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID GEQ WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID GEQ ID LT
 ##
-## Ends in an error in state: 74.
+## Ends in an error in state: 73.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -781,15 +765,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID GEQ ID LT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE ID EQ WHILE
 ##
-## Ends in an error in state: 75.
+## Ends in an error in state: 74.
 ##
 ## rexpr -> expr EQ . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -801,7 +785,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID EQ WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID EQ BOOLEAN WHILE
 ##
-## Ends in an error in state: 76.
+## Ends in an error in state: 75.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -826,7 +810,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID EQ BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID AND WHILE
 ##
-## Ends in an error in state: 77.
+## Ends in an error in state: 76.
 ##
 ## rexpr -> expr AND . expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
@@ -838,7 +822,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID AND WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID AND BOOLEAN WHILE
 ##
-## Ends in an error in state: 78.
+## Ends in an error in state: 77.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -863,7 +847,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID AND BOOLEAN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LPAREN ID SEMICOL
 ##
-## Ends in an error in state: 79.
+## Ends in an error in state: 78.
 ##
 ## rexpr -> expr . ADD expr [ SUB RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
@@ -888,15 +872,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LPAREN ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LPAREN ID COMMA WHILE
 ##
-## Ends in an error in state: 80.
+## Ends in an error in state: 79.
 ##
 ## separated_nonempty_list(COMMA,expr) -> expr COMMA . separated_nonempty_list(COMMA,expr) [ RPAREN ]
 ##
@@ -908,7 +892,7 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LPAREN ID COMMA WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE LPAREN BOOLEAN SEMICOL
 ##
-## Ends in an error in state: 82.
+## Ends in an error in state: 81.
 ##
 ## aexpr -> LPAREN rexpr . RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ## expr -> rexpr . [ SUB OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
@@ -921,7 +905,7 @@ program: BOOL ID LPAREN RPAREN LBRACE LPAREN BOOLEAN SEMICOL
 
 program: BOOL ID LPAREN RPAREN LBRACE LPAREN ID SEMICOL
 ##
-## Ends in an error in state: 84.
+## Ends in an error in state: 83.
 ##
 ## expr -> lexpr . [ SUB OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
 ## lexpr -> LPAREN lexpr . RPAREN [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
@@ -935,14 +919,14 @@ program: BOOL ID LPAREN RPAREN LBRACE LPAREN ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
+## In state 38, spurious reduction of production lexpr -> ID
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE ID LBRACKET ID SEMICOL
 ##
-## Ends in an error in state: 86.
+## Ends in an error in state: 85.
 ##
 ## lexpr -> lexpr LBRACKET expr . RBRACKET [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ## rexpr -> expr . ADD expr [ SUB RBRACKET OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
@@ -966,15 +950,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID LBRACKET ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE MULT ID WHILE
 ##
-## Ends in an error in state: 88.
+## Ends in an error in state: 87.
 ##
 ## lexpr -> MULT lexpr . [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
 ## lexpr -> lexpr . LBRACKET expr RBRACKET [ SUB SEMICOL RPAREN RBRACKET OR NEQ MULT MOD LT LEQ LBRACKET GT GEQ EQ DIV COMMA ASSIGN AND ADD ]
@@ -987,7 +971,7 @@ program: BOOL ID LPAREN RPAREN LBRACE MULT ID WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE WHILE LPAREN ID SEMICOL
 ##
-## Ends in an error in state: 91.
+## Ends in an error in state: 90.
 ##
 ## rexpr -> expr . ADD expr [ SUB RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
@@ -1011,15 +995,15 @@ program: BOOL ID LPAREN RPAREN LBRACE WHILE LPAREN ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE WHILE LPAREN ID RPAREN VOID
 ##
-## Ends in an error in state: 92.
+## Ends in an error in state: 91.
 ##
 ## stmt -> WHILE LPAREN expr RPAREN . stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1031,7 +1015,7 @@ program: BOOL ID LPAREN RPAREN LBRACE WHILE LPAREN ID RPAREN VOID
 
 program: BOOL ID LPAREN RPAREN LBRACE RETURN WHILE
 ##
-## Ends in an error in state: 93.
+## Ends in an error in state: 92.
 ##
 ## stmt -> RETURN . option(expr) SEMICOL [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1043,7 +1027,7 @@ program: BOOL ID LPAREN RPAREN LBRACE RETURN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE RETURN ID RPAREN
 ##
-## Ends in an error in state: 94.
+## Ends in an error in state: 93.
 ##
 ## stmt -> RETURN option(expr) . SEMICOL [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1054,16 +1038,16 @@ program: BOOL ID LPAREN RPAREN LBRACE RETURN ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
-## In state 96, spurious reduction of production option(expr) -> expr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
+## In state 95, spurious reduction of production option(expr) -> expr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE RETURN ID RBRACKET
 ##
-## Ends in an error in state: 96.
+## Ends in an error in state: 95.
 ##
 ## option(expr) -> expr . [ SEMICOL RPAREN ]
 ## rexpr -> expr . ADD expr [ SUB SEMICOL RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
@@ -1087,15 +1071,15 @@ program: BOOL ID LPAREN RPAREN LBRACE RETURN ID RBRACKET
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE IF WHILE
 ##
-## Ends in an error in state: 97.
+## Ends in an error in state: 96.
 ##
 ## stmt -> IF . LPAREN expr RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ## stmt -> IF . LPAREN expr RPAREN stmt ELSE stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
@@ -1108,7 +1092,7 @@ program: BOOL ID LPAREN RPAREN LBRACE IF WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN WHILE
 ##
-## Ends in an error in state: 98.
+## Ends in an error in state: 97.
 ##
 ## stmt -> IF LPAREN . expr RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ## stmt -> IF LPAREN . expr RPAREN stmt ELSE stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
@@ -1121,7 +1105,7 @@ program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID SEMICOL
 ##
-## Ends in an error in state: 99.
+## Ends in an error in state: 98.
 ##
 ## rexpr -> expr . ADD expr [ SUB RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB RPAREN OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
@@ -1146,15 +1130,15 @@ program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN VOID
 ##
-## Ends in an error in state: 100.
+## Ends in an error in state: 99.
 ##
 ## stmt -> IF LPAREN expr RPAREN . stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ## stmt -> IF LPAREN expr RPAREN . stmt ELSE stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
@@ -1167,7 +1151,7 @@ program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN VOID
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR WHILE
 ##
-## Ends in an error in state: 101.
+## Ends in an error in state: 100.
 ##
 ## stmt -> FOR . LPAREN option(expr) SEMICOL option(expr) SEMICOL option(expr) RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1179,7 +1163,7 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN WHILE
 ##
-## Ends in an error in state: 102.
+## Ends in an error in state: 101.
 ##
 ## stmt -> FOR LPAREN . option(expr) SEMICOL option(expr) SEMICOL option(expr) RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1191,7 +1175,7 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN ID RPAREN
 ##
-## Ends in an error in state: 103.
+## Ends in an error in state: 102.
 ##
 ## stmt -> FOR LPAREN option(expr) . SEMICOL option(expr) SEMICOL option(expr) RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1202,16 +1186,16 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
-## In state 96, spurious reduction of production option(expr) -> expr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
+## In state 95, spurious reduction of production option(expr) -> expr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL WHILE
 ##
-## Ends in an error in state: 104.
+## Ends in an error in state: 103.
 ##
 ## stmt -> FOR LPAREN option(expr) SEMICOL . option(expr) SEMICOL option(expr) RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1223,7 +1207,7 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL ID RPAREN
 ##
-## Ends in an error in state: 105.
+## Ends in an error in state: 104.
 ##
 ## stmt -> FOR LPAREN option(expr) SEMICOL option(expr) . SEMICOL option(expr) RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1234,16 +1218,16 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
-## In state 96, spurious reduction of production option(expr) -> expr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
+## In state 95, spurious reduction of production option(expr) -> expr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL SEMICOL WHILE
 ##
-## Ends in an error in state: 106.
+## Ends in an error in state: 105.
 ##
 ## stmt -> FOR LPAREN option(expr) SEMICOL option(expr) SEMICOL . option(expr) RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1255,7 +1239,7 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL SEMICOL WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL SEMICOL ID SEMICOL
 ##
-## Ends in an error in state: 107.
+## Ends in an error in state: 106.
 ##
 ## stmt -> FOR LPAREN option(expr) SEMICOL option(expr) SEMICOL option(expr) . RPAREN stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1266,16 +1250,16 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL SEMICOL ID SEMICOL
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
-## In state 96, spurious reduction of production option(expr) -> expr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
+## In state 95, spurious reduction of production option(expr) -> expr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL SEMICOL RPAREN VOID
 ##
-## Ends in an error in state: 108.
+## Ends in an error in state: 107.
 ##
 ## stmt -> FOR LPAREN option(expr) SEMICOL option(expr) SEMICOL option(expr) RPAREN . stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1287,7 +1271,7 @@ program: BOOL ID LPAREN RPAREN LBRACE FOR LPAREN SEMICOL SEMICOL RPAREN VOID
 
 program: BOOL ID LPAREN RPAREN LBRACE ID RPAREN
 ##
-## Ends in an error in state: 110.
+## Ends in an error in state: 109.
 ##
 ## rexpr -> expr . ADD expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
 ## rexpr -> expr . SUB expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
@@ -1311,15 +1295,15 @@ program: BOOL ID LPAREN RPAREN LBRACE ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 39, spurious reduction of production lexpr -> ID
-## In state 49, spurious reduction of production expr -> lexpr
+## In state 38, spurious reduction of production lexpr -> ID
+## In state 48, spurious reduction of production expr -> lexpr
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN LBRACE RBRACE VOID
 ##
-## Ends in an error in state: 113.
+## Ends in an error in state: 112.
 ##
 ## stmt -> IF LPAREN expr RPAREN stmt . [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ## stmt -> IF LPAREN expr RPAREN stmt . ELSE stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
@@ -1332,7 +1316,7 @@ program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN LBRACE RBRACE VOID
 
 program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN LBRACE RBRACE ELSE VOID
 ##
-## Ends in an error in state: 114.
+## Ends in an error in state: 113.
 ##
 ## stmt -> IF LPAREN expr RPAREN stmt ELSE . stmt [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR ELSE CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1344,7 +1328,7 @@ program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN LBRACE RBRACE ELSE VOI
 
 program: BOOL ID LPAREN RPAREN LBRACE BOOL ID RPAREN
 ##
-## Ends in an error in state: 117.
+## Ends in an error in state: 116.
 ##
 ## stmtordec -> vardecl . SEMICOL [ WHILE SUB RETURN RBRACE NOT MULT LPAREN LBRACE INTEGER INT IF ID FOR CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
@@ -1355,14 +1339,14 @@ program: BOOL ID LPAREN RPAREN LBRACE BOOL ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 18, spurious reduction of production vardecl -> typ vardesc
+## In state 20, spurious reduction of production vardecl -> typ vardesc
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID LPAREN RPAREN LBRACE LBRACE RBRACE VOID
 ##
-## Ends in an error in state: 119.
+## Ends in an error in state: 118.
 ##
 ## list(stmtordec) -> stmtordec . list(stmtordec) [ RBRACE ]
 ##
@@ -1374,7 +1358,7 @@ program: BOOL ID LPAREN RPAREN LBRACE LBRACE RBRACE VOID
 
 program: BOOL MULT ID RPAREN
 ##
-## Ends in an error in state: 125.
+## Ends in an error in state: 124.
 ##
 ## topdecl -> vardecl . SEMICOL [ VOID INT EOF CHAR BOOL ]
 ##
@@ -1385,19 +1369,18 @@ program: BOOL MULT ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 17, spurious reduction of production vardecl -> typ MULT vardesc
+## In state 19, spurious reduction of production vardesc -> MULT vardesc
+## In state 20, spurious reduction of production vardecl -> typ vardesc
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL WHILE
 ##
-## Ends in an error in state: 127.
+## Ends in an error in state: 126.
 ##
 ## topdecl -> typ . ID LPAREN loption(separated_nonempty_list(COMMA,vardecl)) RPAREN block [ VOID INT EOF CHAR BOOL ]
 ## vardecl -> typ . vardesc [ SEMICOL ]
-## vardecl -> typ . MULT vardesc [ SEMICOL ]
-## vardecl -> typ . vardesc LBRACKET INTEGER RBRACKET [ SEMICOL ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ
@@ -1407,7 +1390,7 @@ program: BOOL WHILE
 
 program: BOOL ID WHILE
 ##
-## Ends in an error in state: 128.
+## Ends in an error in state: 127.
 ##
 ## topdecl -> typ ID . LPAREN loption(separated_nonempty_list(COMMA,vardecl)) RPAREN block [ VOID INT EOF CHAR BOOL ]
 ## vardesc -> ID . [ SEMICOL LBRACKET ]
@@ -1420,7 +1403,7 @@ program: BOOL ID WHILE
 
 program: BOOL ID LPAREN WHILE
 ##
-## Ends in an error in state: 129.
+## Ends in an error in state: 128.
 ##
 ## topdecl -> typ ID LPAREN . loption(separated_nonempty_list(COMMA,vardecl)) RPAREN block [ VOID INT EOF CHAR BOOL ]
 ##
@@ -1432,7 +1415,7 @@ program: BOOL ID LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN WHILE
 ##
-## Ends in an error in state: 131.
+## Ends in an error in state: 130.
 ##
 ## topdecl -> typ ID LPAREN loption(separated_nonempty_list(COMMA,vardecl)) RPAREN . block [ VOID INT EOF CHAR BOOL ]
 ##
@@ -1444,7 +1427,7 @@ program: BOOL ID LPAREN RPAREN WHILE
 
 program: BOOL ID SEMICOL WHILE
 ##
-## Ends in an error in state: 133.
+## Ends in an error in state: 132.
 ##
 ## list(topdecl) -> topdecl . list(topdecl) [ EOF ]
 ##
