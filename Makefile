@@ -61,4 +61,8 @@ utop: ## Run a REPL and link with the project's libraries
 .PHONY: test-parser
 test-parser: ## Test all the test sources
 	@./tester.sh ${TEST_SOURCES}
+
+.PHONY: test-symbol-table
+test-symbol-table: ## Test the symbol table
+	opam exec -- dune exec test/symbol_table_test.exe
 	
