@@ -13,4 +13,6 @@
 	Error: line 2, position 7
 		   Unexpected character
 *)
-val report_error: string -> in_channel -> out_channel -> Location.lexeme_pos -> string -> unit
+type error_location = SingleLine of Location.lexeme_pos | Multiline of Location.code_pos
+
+val report_error: string -> in_channel -> out_channel -> error_location -> string -> unit
