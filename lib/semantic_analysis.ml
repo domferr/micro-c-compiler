@@ -8,7 +8,7 @@ type symbol =
   (* function pos, name, return type, list of formals *)
   | Function of Location.code_pos * string * Ast.typ * (Ast.typ * Ast.identifier) list
 
-let add_symbol tbl sym = 
+let st_add_symbol tbl sym = 
   let loc_and_ide = 
     match sym with
       Variable (loc, ide, _)       -> (loc, ide)
@@ -27,31 +27,45 @@ let add_rt_support_functions tbl =
   let getIntFun = Function(Location.dummy_code_pos, "getint", Ast.TypI, []) in
   Symbol_table.add_entry "getint" getIntFun tbl
 
-let check_main_function tbl =
-  let main_notdecl_error = Semantic_error(
-    Location.dummy_code_pos, 
-    "Missing definition of the 'main' function") 
-  in
-  match Symbol_table.lookup "main" tbl with
-      None -> raise(main_notdecl_error)
-    | Some(Function(_, "main", Ast.TypI, [])) -> () (* int main() *)
-    | Some(Function(_, "main", Ast.TypV, [])) -> () (* void main() *)
-    | Some(Function(loc, "main", _, _)) -> raise(Semantic_error(
-        loc, 
-        "Invalid definition of the 'main' function. The signature must be 'int main()' or 'void main()'"))
-    | _ -> raise(main_notdecl_error)
-
-let type_check (Ast.Prog topdeclList) =
-  let symbol_table = Symbol_table.empty_table() in
-  let _ = add_rt_support_functions symbol_table in
+let add_topdecl_pass tbl topdeclList =
   let add_global tbl ann_node = 
     let new_symbol =
       match ann_node.node with
         Ast.Vardec (typ, ide) -> Variable(ann_node.loc, ide, typ)
       | Ast.Fundecl fun_decl  -> Function(ann_node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals)
-    in add_symbol tbl new_symbol
+    in st_add_symbol tbl new_symbol
   in
-  List.iter (add_global symbol_table) topdeclList;
+  List.iter (add_global tbl) topdeclList
+
+let check_main_function_pass topdeclList =
+  let checker ann_node =
+    match ann_node.node with
+      Ast.Vardec (_, "main") -> raise(Semantic_error(
+        ann_node.loc, 
+        "Cannot declare 'main' variable: this name is reserved for the 'main' function")
+      )
+    | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; body = _ } -> true
+    | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; body = _ } -> true
+    | Ast.Fundecl { typ = _; fname = "main"; formals = _; body = _ } -> raise(Semantic_error(
+        ann_node.loc, 
+        "Invalid definition of the 'main' function. The signature must be 'int main()' or 'void main()'")
+      )
+    | _ -> false
+  in
+  let has_main = List.exists checker topdeclList in
+  if has_main then ()
+  else raise(Semantic_error(
+    Location.dummy_code_pos, 
+    "Missing definition of the 'main' function")
+  )
+
+let type_check (Ast.Prog topdeclList) =
+  let symbol_table = Symbol_table.empty_table() in
+  (* Add runtime support functions before any variable or function *)
+  add_rt_support_functions symbol_table;
+  (* Add global variables and functions *)
+  add_topdecl_pass symbol_table topdeclList;
   (* Check main function and its return type *)
-  check_main_function symbol_table;
+  check_main_function_pass topdeclList;
+  (* Finally return AST *)
   Ast.Prog topdeclList

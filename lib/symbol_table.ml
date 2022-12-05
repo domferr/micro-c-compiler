@@ -61,10 +61,9 @@ let lookup key symbol_table =
 let add_entry key data symbol_table =
   (match Hashtbl.find_opt symbol_table.tbl key with
     None        ->  ()
-  | Some entry  ->  if entry.lvl = symbol_table.current_level then
-                      raise(DuplicateEntry(key))
-                    else
-                      ()
+  | Some entry when entry.lvl = symbol_table.current_level
+                ->  raise(DuplicateEntry(key))
+  | _           ->  ()
   );
   let new_entry = { value = data; lvl = symbol_table.current_level; } in
   Hashtbl.add symbol_table.tbl key new_entry;
