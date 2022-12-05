@@ -9,7 +9,7 @@
 	Error example:
 	int main() {
 		int test
-				^^^^       
+			^^^^       
 	Error: line 2, position 7
 		   Unexpected character
 *)

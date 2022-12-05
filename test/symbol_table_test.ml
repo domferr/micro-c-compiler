@@ -150,7 +150,7 @@ let end_block_empty_table_test () =
   let _ = Symbol_table.end_block tbl in
   true
 
-(* Test function 'end_block' with empty table *)
+(* Test function 'end_block' with one level table *)
 let end_block_one_level_table_test () =
   let tbl = Symbol_table.empty_table() in
   let _ = Symbol_table.add_entry "x" 1 tbl in
@@ -168,6 +168,17 @@ let end_block_one_level_table_test () =
   else
     false
 
+(* Test functions 'end_block' and 'lookup' after ending a block and 
+   creating again a new block with the same level *)
+let end_block_rebuild_level_test () =
+  let tbl = Symbol_table.empty_table() in
+  let _ = Symbol_table.add_entry "x" 1 tbl in
+  let _ = Symbol_table.begin_block tbl in
+  let _ = Symbol_table.add_entry "x" 2 tbl in
+  let _ = Symbol_table.end_block tbl in
+  let _ = Symbol_table.begin_block tbl in
+  assert_lookup "x" 1 tbl
+
 (* ------------- MAIN ENTRY POINT ------------- *)
 type test = {
   func: unit -> bool;
@@ -175,10 +186,17 @@ type test = {
 }
 let () =
   let testerFun test =
-    let res = test.func() in    if not res then 
+    try
+    let res = test.func() in
+    if not res then 
       print_test_failed test.name 
     else 
       print_test_passed test.name
+    with e -> 
+      print_test_failed test.name;
+      let msg = Printexc.to_string e
+      and stack = Printexc.get_backtrace () in
+        Printf.fprintf stdout "There was an error: %s%s\n\n" msg stack
   in
   (* Run all the tests *)
   List.iter testerFun [
@@ -196,4 +214,5 @@ let () =
     { name = "End block and lookup with multiple blocks"; func = end_block_lookup_multiple_blocks_test };
     { name = "End block with empty table"; func = end_block_empty_table_test };
     { name = "End block with a table of one level"; func = end_block_one_level_table_test };
+    { name = "Ensure there isn't any data after ending block and recreating a new block at the same level"; func = end_block_rebuild_level_test };
   ]

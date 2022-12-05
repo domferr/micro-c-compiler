@@ -21,13 +21,6 @@ let add_symbol tbl sym =
         let error_msg = Printf.sprintf "Duplicate declaration of '%s'" entry in
         raise(Semantic_error((fst loc_and_ide), error_msg))
 
-let analyze_globals tbl ann_node = 
-  let new_symbol =
-    match ann_node.node with
-      Ast.Vardec (typ, ide) -> Variable(ann_node.loc, ide, typ)
-    | Ast.Fundecl fun_decl  -> Function(ann_node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals)
-  in add_symbol tbl new_symbol
-
 let add_rt_support_functions tbl = 
   let printFun = Function(Location.dummy_code_pos, "print", Ast.TypV, [(Ast.TypI, "num")]) in
   let _ = Symbol_table.add_entry "print" printFun tbl in
@@ -51,8 +44,14 @@ let check_main_function tbl =
 let type_check (Ast.Prog topdeclList) =
   let symbol_table = Symbol_table.empty_table() in
   let _ = add_rt_support_functions symbol_table in
-  List.iter (analyze_globals symbol_table) topdeclList;
+  let add_global tbl ann_node = 
+    let new_symbol =
+      match ann_node.node with
+        Ast.Vardec (typ, ide) -> Variable(ann_node.loc, ide, typ)
+      | Ast.Fundecl fun_decl  -> Function(ann_node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals)
+    in add_symbol tbl new_symbol
+  in
+  List.iter (add_global symbol_table) topdeclList;
   (* Check main function and its return type *)
   check_main_function symbol_table;
-
   Ast.Prog topdeclList
