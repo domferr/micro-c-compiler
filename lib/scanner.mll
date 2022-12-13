@@ -22,7 +22,9 @@
 			("else", 	ELSE);
 			("for", 	FOR);
 			("while", 	WHILE);
-			("return", 	RETURN)
+			("return", 	RETURN);
+			("true"), BOOLEAN(true);
+			("false"), BOOLEAN(false)
 		]
 	
 	(* special characters are \', \b, \f, \t, \\, \r, and \n *)
