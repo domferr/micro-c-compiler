@@ -58,7 +58,8 @@ let check_main_function_pass topdeclList =
     "Missing definition of the 'main' function")
   )
 
-let type_check_access acc symbtbl = match acc.node with
+let rec type_check_expr expr symbtbl =
+  let rec type_check_access acc = match acc.node with
     Ast.AccVar ide -> 
       (match Symbol_table.lookup ide symbtbl with
           Some Variable(_, _, t) -> Some t
@@ -66,19 +67,33 @@ let type_check_access acc symbtbl = match acc.node with
           acc.loc, 
           Printf.sprintf "Variable '%s' not declared" ide)
         ))
-  | _ -> failwith("1 Not implemented yet")
-
-let rec type_check_expr expr symbtbl =
+  | Ast.AccDeref e -> 
+    (match type_check_expr e symbtbl with
+        Some (Ast.TypP(t)) -> Some t
+      | _ -> raise(Semantic_error(acc.loc, "Invalid pointer dereferencing")))
+  | Ast.AccIndex (accArr, e) -> (match type_check_access accArr with
+      Some (Ast.TypA(t, _)) -> 
+        (match type_check_expr e symbtbl with
+            Some Ast.TypI -> Some t
+          | _ -> raise(Semantic_error(acc.loc, "Array index must be and integer")))
+    | _ -> raise(Semantic_error(acc.loc, "Invalid array indexing")))
+  in 
   match expr.node with 
-    Ast.Access acc -> type_check_access acc symbtbl
+    Ast.Access acc -> type_check_access acc
   | Ast.Assign (acc, ex) -> 
-      let acc_typ = type_check_access acc symbtbl in
+      let acc_typ = type_check_access acc in
       let exp_typ = type_check_expr ex symbtbl in
       if acc_typ = exp_typ then acc_typ else raise(Semantic_error(
         expr.loc, 
         "Invalid assignment")
       )
-  | Ast.Addr _ -> failwith("3 Not implemented yet") (* Some Ast.TypP *)
+  | Ast.Addr acc -> 
+    (match type_check_access acc with
+      Some t -> Some (Ast.TypP(t))
+    | _ -> raise(Semantic_error(
+      expr.loc, 
+      "Invalid pointer type")
+    ))
   | Ast.ILiteral _ -> Some Ast.TypI
   | Ast.CLiteral _ -> Some Ast.TypC
   | Ast.BLiteral _ -> Some Ast.TypB
