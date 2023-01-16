@@ -17,14 +17,24 @@ let st_add_symbol tbl new_symbol =
     Symbol_table.add_entry (snd loc_and_ide) new_symbol tbl
   with
     | Symbol_table.DuplicateEntry(entry) -> 
-        let error_msg = Printf.sprintf "Duplicate declaration of '%s'" entry in
-        raise(Semantic_error((fst loc_and_ide), error_msg))
-  
-let add_rt_support_functions tbl = 
-  let printFun = Function(Location.dummy_code_pos, "print", Ast.TypV, [(Ast.TypI, "num")]) in
-  let _ = Symbol_table.add_entry "print" printFun tbl in
-  let getIntFun = Function(Location.dummy_code_pos, "getint", Ast.TypI, []) in
-  Symbol_table.add_entry "getint" getIntFun tbl
+        raise(Semantic_error(
+          (fst loc_and_ide), 
+          Printf.sprintf "Duplicate declaration of '%s'" entry
+        ))
+
+let rt_support_functions = [
+  "print", Function(
+    Location.dummy_code_pos, 
+    "print", 
+    Ast.TypV, 
+    [(Ast.TypI, "num")]
+  );
+  "getint", Function(
+    Location.dummy_code_pos, 
+    "getint", 
+    Ast.TypI, 
+    []
+)]
 
 let check_main_function_pass topdeclList =
   let checker ann_node =
@@ -33,9 +43,9 @@ let check_main_function_pass topdeclList =
         ann_node.loc, 
         "Cannot declare 'main' variable: this name is reserved for the 'main' function")
       )
-    | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; body = _ } -> true
-    | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; body = _ } -> true
-    | Ast.Fundecl { typ = _; fname = "main"; formals = _; body = _ } -> raise(Semantic_error(
+    | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; _ } -> true
+    | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; _ } -> true
+    | Ast.Fundecl { fname = "main"; _ } -> raise(Semantic_error(
         ann_node.loc, 
         "Invalid definition of the 'main' function. The signature must be 'int main()' or 'void main()'")
       )
@@ -48,91 +58,153 @@ let check_main_function_pass topdeclList =
     "Missing definition of the 'main' function")
   )
 
-let rec check_stmt ret_typ stmt symbol_table =
-  match stmt.node with 
-    Ast.If (_, thbr, elbr) ->
-      (* todo check guard is boolean *) 
-      Symbol_table.begin_block symbol_table;
-      let th_ret_typ = check_stmt ret_typ thbr symbol_table in
-      Symbol_table.end_block symbol_table;
-      Symbol_table.begin_block symbol_table;
-      let el_ret_typ = check_stmt ret_typ elbr symbol_table in
-      Symbol_table.end_block symbol_table;
-      (match th_ret_typ, el_ret_typ with
-      | Some _, None  -> th_ret_typ
-      | None , Some _ -> el_ret_typ
-      | _ , _         -> th_ret_typ)
-  | Ast.While (_, stmt) -> 
-      Symbol_table.begin_block symbol_table;
-      let while_ret = check_stmt ret_typ stmt symbol_table in
-      Symbol_table.end_block symbol_table;
-      while_ret
-  | Ast.Expr _ -> Some Ast.TypV
-  | Ast.Block stmtordecList -> 
-    Symbol_table.begin_block symbol_table;
-    let checker ann_node = 
-      match ann_node.node with
-        Ast.Stmt stmt -> 
-          check_stmt ret_typ stmt symbol_table
-      | Ast.Dec (typ, ide) -> 
-        st_add_symbol symbol_table (Variable(ann_node.loc, ide, typ));
-        None
-    in 
-    let ret_list = List.map checker stmtordecList in
-    Symbol_table.end_block symbol_table;
-    let elem_typ agg typ = 
-      match agg, typ with
-        _, None -> agg
-      | Some a, Some b when a != b -> 
-        raise(Semantic_error(
-          stmt.loc,
-          "THIS SHOULDN'T HAPPEN!!!!"
+let type_check_access acc symbtbl = match acc.node with
+    Ast.AccVar ide -> 
+      (match Symbol_table.lookup ide symbtbl with
+          Some Variable(_, _, t) -> Some t
+        | _ -> raise(Semantic_error(
+          acc.loc, 
+          Printf.sprintf "Variable '%s' not declared" ide)
         ))
-      | _, Some _ -> typ
-    in
-    List.fold_left elem_typ None ret_list
+  | _ -> failwith("1 Not implemented yet")
+
+let rec type_check_expr expr symbtbl =
+  match expr.node with 
+    Ast.Access acc -> type_check_access acc symbtbl
+  | Ast.Assign (acc, ex) -> 
+      let acc_typ = type_check_access acc symbtbl in
+      let exp_typ = type_check_expr ex symbtbl in
+      if acc_typ = exp_typ then acc_typ else raise(Semantic_error(
+        expr.loc, 
+        "Invalid assignment")
+      )
+  | Ast.Addr _ -> failwith("3 Not implemented yet") (* Some Ast.TypP *)
+  | Ast.ILiteral _ -> Some Ast.TypI
+  | Ast.CLiteral _ -> Some Ast.TypC
+  | Ast.BLiteral _ -> Some Ast.TypB
+  | Ast.UnaryOp (op, ex) -> 
+      let expr_typ = type_check_expr ex symbtbl in
+      (match op, expr_typ with
+        Neg, Some Ast.TypI -> Some Ast.TypI
+      | Not, Some Ast.TypB -> Some Ast.TypB
+      | _ -> raise(Semantic_error(expr.loc, "Invalid unary operation")))
+  | Ast.BinaryOp (op, left, right) -> 
+      let left_typ = type_check_expr left symbtbl in
+      let right_typ = type_check_expr right symbtbl in
+      let op_type = match op with 
+          Ast.Add 
+        | Ast.Sub 
+        | Ast.Mult
+        | Ast.Div
+        | Ast.Mod -> Ast.TypI, Ast.TypI (* op between ints returns int *)
+        | Ast.And
+        | Ast.Or -> Ast.TypB, Ast.TypB (* op between bools returns bool *)
+        | _ -> Ast.TypI, Ast.TypB (* ints comparison returns bool *)
+      in if (left_typ = right_typ && left_typ = Some (fst op_type)) then Some (snd op_type) else raise(Semantic_error(
+        expr.loc, 
+        "Invalid binary operation")
+      )
+  | Ast.Call (ide, exprList) -> 
+      match Symbol_table.lookup ide symbtbl with
+        Some Function(_, _, ret_typ, formalsList) ->
+          (try
+            List.iter2 (fun ex formal ->
+              let formal_typ = fst formal in
+              (match type_check_expr ex symbtbl with
+                Some t when t = formal_typ -> ()
+              | _ -> raise(Semantic_error(ex.loc, "Invalid argument")))
+            ) exprList formalsList;
+            Some ret_typ
+          with Invalid_argument _ -> 
+            let declArgsLen = List.length formalsList in
+            let callArgsLen = List.length formalsList in
+            raise(Semantic_error(
+              expr.loc,
+              Printf.sprintf "Function '%s' expects %d arguments but here %d arguments are passed to it" 
+                              ide declArgsLen callArgsLen
+            )))
+      | _ -> raise(Semantic_error(
+          expr.loc,
+          Printf.sprintf "Missing declaration of function '%s'" ide
+        ))
+
+let rec type_check_stmt ret_typ stmt symbtbl =
+  let type_check_guard guard = 
+    (match type_check_expr guard symbtbl with
+      Some Ast.TypB -> ()
+    | None -> raise(Semantic_error(guard.loc, "Missing guard"))
+    | _ -> raise(Semantic_error(guard.loc, "Guard type is not boolean"))
+  ) in
+  match stmt.node with 
+    Ast.If (guard, thbr, elbr) ->
+      (* Type check guard *)
+      type_check_guard guard;
+      (* Type check then branch *)
+      Symbol_table.begin_block symbtbl;
+      let th_ret_typ = type_check_stmt ret_typ thbr symbtbl in
+      Symbol_table.end_block symbtbl;
+      (* Type check else branch if any *)
+      Symbol_table.begin_block symbtbl;
+      let el_ret_typ = type_check_stmt ret_typ elbr symbtbl in
+      Symbol_table.end_block symbtbl;
+      (* Compute if statement's return type if any *)
+      (match th_ret_typ, el_ret_typ with
+        None, None  -> None
+      | _, _        -> th_ret_typ)
+  | Ast.While (guard, stmt) -> 
+      (* Type check guard *)
+      type_check_guard guard;
+      (* Type check while body *)
+      Symbol_table.begin_block symbtbl;
+      let while_ret = type_check_stmt ret_typ stmt symbtbl in
+      Symbol_table.end_block symbtbl;
+      while_ret
+  | Ast.Expr e -> type_check_expr e symbtbl
+  | Ast.Block stmtordecList -> 
+      Symbol_table.begin_block symbtbl;
+      let ret_list = List.filter_map (fun ann_node ->
+        match ann_node.node with
+          Ast.Stmt stmt -> type_check_stmt ret_typ stmt symbtbl
+        | Ast.Dec (typ, ide) -> 
+          st_add_symbol symbtbl (Variable(ann_node.loc, ide, typ));
+          None
+      ) stmtordecList in 
+      (match ret_list with
+        t::_  -> Some t
+      | _     -> None)
   | Ast.Return None when ret_typ = Ast.TypV -> Some ret_typ
-  | Ast.Return None -> raise(Semantic_error(
-      stmt.loc,
-      "Missing return value"
-    ))
-  | Ast.Return (Some _) -> Some ret_typ (* todo *)
- 
+  | Ast.Return None -> raise(Semantic_error(stmt.loc, "Missing return value"))
+  | Ast.Return (Some expr) -> 
+      match type_check_expr expr symbtbl with
+        Some expr_typ when expr_typ = ret_typ -> Some ret_typ
+      | _ -> raise(Semantic_error(stmt.loc, "Invalid return type"))
+
+let type_check_function_decl loc fun_decl symbtbl =
+  st_add_symbol symbtbl (Function(loc, fun_decl.fname, fun_decl.typ, fun_decl.formals));
+  Symbol_table.begin_block symbtbl;
+  (* Add each formal to the symbol table *)
+  List.iter (fun arg -> st_add_symbol symbtbl (Variable(loc, snd arg, fst arg))) fun_decl.formals;
+  (* Check function body *)
+  (match type_check_stmt fun_decl.typ fun_decl.body symbtbl with
+      None when fun_decl.typ != Ast.TypV -> raise(Semantic_error(
+        loc, "Missing return statement")
+      )
+    | _ -> ()
+  );
+  Symbol_table.end_block symbtbl
+
+(* TODO: check that global variables are initialized with constant values *)
 let type_check (Ast.Prog topdeclList) =
-  let symbol_table = Symbol_table.empty_table() in
+  let symbtbl = Symbol_table.empty_table() in
   (* Add runtime support functions before anything else *)
-  add_rt_support_functions symbol_table;
+  List.iter (fun fn -> Symbol_table.add_entry (fst fn) (snd fn) symbtbl) rt_support_functions;
   (* Check main function and its return type *)
   check_main_function_pass topdeclList;
   (* Analyze each top declaration *)
-  let st_add_topdecl_node tbl ann_node = 
-    let new_symbol = match ann_node.node with
-      Ast.Vardec (typ, ide) -> Variable(ann_node.loc, ide, typ)
-    | Ast.Fundecl fun_decl  -> Function(ann_node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals)
-    in st_add_symbol tbl new_symbol
-  in
   List.iter (fun ann_node ->
-    (* Add global variable or function *)
-    st_add_topdecl_node symbol_table ann_node;
     match ann_node.node with
-      Ast.Vardec _ -> ()
-    | Ast.Fundecl { typ = ret_typ; fname = _; formals = args; body = body_stmt } ->
-        Symbol_table.begin_block symbol_table;
-        (* Add each formal to the symbol table *)
-        List.iter (fun arg -> 
-          st_add_topdecl_node symbol_table { 
-            node = Ast.Vardec(fst arg, snd arg); 
-            loc = ann_node.loc 
-          }
-        ) args;
-        (match check_stmt ret_typ body_stmt symbol_table with
-            None -> raise(Semantic_error(
-              ann_node.loc,
-              "Missing return statement"
-            ))
-          | Some _ -> ()
-        );
-        Symbol_table.end_block symbol_table;
+        Ast.Vardec (typ, ide) -> st_add_symbol symbtbl (Variable(ann_node.loc, ide, typ))
+      | Ast.Fundecl fun_decl  -> type_check_function_decl ann_node.loc fun_decl symbtbl
   ) topdeclList;
   (* Finally return AST *)
   Ast.Prog topdeclList

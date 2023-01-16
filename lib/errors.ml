@@ -41,7 +41,7 @@ let report_error header_str file_channel outchan error_loc msg =
 	in
 	let is_multline = match error_loc with
 			SingleLine(_) -> false
-		| Multiline(_) -> true
+		| Multiline { start_line = startl; end_line = endl; _} -> startl != endl
 	in
 	(* Start reading the channel again from the beginning *)
 	seek_in file_channel 0;
