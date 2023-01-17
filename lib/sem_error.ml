@@ -35,10 +35,6 @@ let raise_invalid_array_index node = raise(Semantic_error(node.loc,
   "Invalid array indexing"
 ))
 
-let raise_invalid_assignment node = raise(Semantic_error(node.loc, 
-  "Invalid assignment"
-))
-
 let descr_typ typ = match typ with
     Ast.TypI -> "integer"
   | Ast.TypB -> "boolean"
@@ -50,10 +46,6 @@ let descr_typ typ = match typ with
 let raise_invalid_assignment_type node left_typ right_typ = raise(Semantic_error(
   node.loc, 
   Printf.sprintf "Invalid assignment of %s to %s" (descr_typ right_typ) (descr_typ left_typ)
-))
-
-let raise_invalid_pointer_type node = raise(Semantic_error(node.loc, 
-  "Invalid pointer type"
 ))
 
 let raise_invalid_unary_op node = raise(Semantic_error(node.loc, 
@@ -68,10 +60,6 @@ let raise_invalid_function_arg_type node req_typ given_typ = raise(Semantic_erro
   Printf.sprintf "Invalid argument, expected %s but found %s" (descr_typ req_typ) (descr_typ given_typ))
 )
 
-let raise_invalid_argument node = raise(Semantic_error(node.loc, 
-  "Invalid argument"
-))
-
 let raise_invalid_arguments_number node funname req_len given_len = raise(Semantic_error(node.loc, 
   Printf.sprintf "Function '%s' expects %d arguments but here %d arguments are passed to it" 
     funname req_len given_len
@@ -79,10 +67,6 @@ let raise_invalid_arguments_number node funname req_len given_len = raise(Semant
 
 let raise_missing_fun_declaration node funname = raise(Semantic_error(node.loc, 
   Printf.sprintf "Missing declaration of function '%s'" funname
-))
-
-let raise_missing_guard node = raise(Semantic_error(node.loc, 
-  "Missing guard"
 ))
 
 let raise_invalid_guard_type node = raise(Semantic_error(node.loc, 
