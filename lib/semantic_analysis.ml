@@ -10,7 +10,7 @@ let st_add_symbol tbl new_symbol =
   let loc_and_ide = match new_symbol with
       Variable (loc, ide, _)       -> (loc, ide)
     | Function (loc, fname, _, _)  -> (loc, fname)
-  in 
+  in
   try
     Symbol_table.add_entry (snd loc_and_ide) new_symbol tbl
   with
@@ -106,9 +106,11 @@ let rec type_check_expr expr symbtbl =
           (try
             List.iter2 (fun ex formal ->
               let formal_typ = fst formal in
-              (match type_check_expr ex symbtbl with
-                  Some t when t = formal_typ -> ()
-                | Some t -> Sem_error.raise_invalid_function_arg_type ex formal_typ t
+              let given_typ = type_check_expr ex symbtbl in
+              (match given_typ, formal_typ with
+                  Some Ast.TypA(t1, _), Ast.TypA(t2, _) when t1 = t2 -> ()
+                | Some t1, t2 when t1 = t2 -> ()
+                | Some t1, t2 -> Printf.printf "%s:%s\n" (Ast.show_typ t1) (Ast.show_typ t2); Sem_error.raise_invalid_function_arg_type ex t2 t1
                 | _ -> Sem_error.raise_invalid_argument ex)
             ) exprList formalsList;
             Some ret_typ
@@ -171,23 +173,21 @@ let rec type_check_stmt ret_typ stmt symbtbl =
 
 let type_check_function_decl node fun_decl symbtbl =
   st_add_symbol symbtbl (Function(node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals));
-  Symbol_table.begin_block symbtbl;
   (* Add each formal to the symbol table *)
   List.iter (fun arg -> st_add_symbol symbtbl (Variable(node.loc, snd arg, fst arg))) fun_decl.formals;
   (* Check function body *)
-  (match type_check_stmt fun_decl.typ fun_decl.body symbtbl with
+  match type_check_stmt fun_decl.typ fun_decl.body symbtbl with
       None when fun_decl.typ != Ast.TypV -> Sem_error.raise_missing_return node
     | _ -> ()
-  );
-  Symbol_table.end_block symbtbl
+
 
 (* TODO: check that global variables are initialized with constant values *)
 let type_check (Ast.Prog topdeclList) =
   let symbtbl = Symbol_table.empty_table() in
-  (* Add runtime support functions before anything else *)
-  List.iter (fun fn -> Symbol_table.add_entry (fst fn) (snd fn) symbtbl) rt_support_functions;
   (* Check main function and its return type *)
   check_main_function_pass topdeclList;
+  (* Add runtime support functions before anything else *)
+  List.iter (fun fn -> Symbol_table.add_entry (fst fn) (snd fn) symbtbl) rt_support_functions;
   (* Analyze each top declaration *)
   List.iter (fun ann_node ->
     match ann_node.node with

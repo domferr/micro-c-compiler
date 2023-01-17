@@ -63,7 +63,7 @@ let add_entry_duplicate_test () =
   let tbl = Symbol_table.empty_table() in
   let _ = Symbol_table.add_entry "x" 1 tbl in
   let res = assert_exception (fun _ -> 
-    Symbol_table.add_entry "x" 1 tbl
+    Symbol_table.add_entry "x" 2 tbl
   ) in
   res
 
