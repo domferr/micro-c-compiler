@@ -49,7 +49,7 @@ let process_source filename =
   | Scanner.Lexing_error (pos, msg)
   | Parsing.Syntax_error (pos,msg) -> 
     handle_syntatic_error source pos msg
-  | Semantic_analysis.Semantic_error (pos, msg) -> 
+  | Sem_error.Semantic_error (pos, msg) -> 
     handle_semantic_error source pos msg  
 
 let () = 

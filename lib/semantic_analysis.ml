@@ -1,7 +1,5 @@
 open Ast
 
-exception Semantic_error of Location.code_pos * string
-
 type symbol = 
   (* variable pos, name, variable type *)
     Variable of Location.code_pos * Ast.identifier * Ast.typ 
@@ -16,11 +14,7 @@ let st_add_symbol tbl new_symbol =
   try
     Symbol_table.add_entry (snd loc_and_ide) new_symbol tbl
   with
-    | Symbol_table.DuplicateEntry(entry) -> 
-        raise(Semantic_error(
-          (fst loc_and_ide), 
-          Printf.sprintf "Duplicate declaration of '%s'" entry
-        ))
+    | Symbol_table.DuplicateEntry(entry) -> Sem_error.raise_duplicate_declaration (fst loc_and_ide) entry
 
 let rt_support_functions = [
   "print", Function(
@@ -39,69 +33,48 @@ let rt_support_functions = [
 let check_main_function_pass topdeclList =
   let checker ann_node =
     match ann_node.node with
-      Ast.Vardec (_, "main") -> raise(Semantic_error(
-        ann_node.loc, 
-        "Cannot declare 'main' variable: this name is reserved for the 'main' function")
-      )
+      Ast.Vardec (_, "main") -> Sem_error.raise_variable_main ann_node
     | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; _ } -> true
     | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; _ } -> true
-    | Ast.Fundecl { fname = "main"; _ } -> raise(Semantic_error(
-        ann_node.loc, 
-        "Invalid definition of the 'main' function. The signature must be 'int main()' or 'void main()'")
-      )
+    | Ast.Fundecl { fname = "main"; _ } -> Sem_error.raise_invalid_def_main ann_node
     | _ -> false
   in
   let has_main = List.exists checker topdeclList in
-  if has_main then ()
-  else raise(Semantic_error(
-    Location.dummy_code_pos, 
-    "Missing definition of the 'main' function")
-  )
+  if has_main then () else Sem_error.raise_missing_main_definition()
 
 let rec type_check_expr expr symbtbl =
   let rec type_check_access acc = match acc.node with
     Ast.AccVar ide -> 
       (match Symbol_table.lookup ide symbtbl with
           Some Variable(_, _, t) -> Some t
-        | _ -> raise(Semantic_error(
-          acc.loc, 
-          Printf.sprintf "Variable '%s' not declared" ide)
-        ))
+        | _ -> Sem_error.raise_variable_not_declared acc ide)
   | Ast.AccDeref e -> 
     (match type_check_expr e symbtbl with
         Some (Ast.TypP(t)) -> Some t
-      | _ -> raise(Semantic_error(acc.loc, "Invalid pointer dereferencing")))
+      | _ -> Sem_error.raise_invalid_pointer_deref acc)
   | Ast.AccIndex (accArr, e) -> (match type_check_access accArr with
       Some (Ast.TypA(t, _)) -> 
         (match type_check_expr e symbtbl with
             Some Ast.TypI -> Some t
-          | _ -> raise(Semantic_error(acc.loc, "Array index must be and integer")))
-    | _ -> raise(Semantic_error(acc.loc, "Invalid array indexing")))
+          | _ -> Sem_error.raise_invalid_array_index_type acc)
+    | _ -> Sem_error.raise_invalid_array_index acc)
   in 
   match expr.node with 
     Ast.Access acc -> type_check_access acc
   | Ast.Assign (acc, ex) -> 
       let acc_typ = type_check_access acc in
       let exp_typ = type_check_expr ex symbtbl in
-      let assign_err left_typ right_typ = Semantic_error(
-        expr.loc, 
-        Printf.sprintf "Invalid assignment of %s to %s" (Ast_descr.descr_typ right_typ) (Ast_descr.descr_typ left_typ))
-      in
       (match acc_typ, exp_typ with
-          Some Ast.TypA(a1, a2), Some Ast.TypA(e1, e2) -> raise(assign_err (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2)))
-        | Some a_typ, Some e_typ when a_typ != e_typ -> raise(assign_err a_typ e_typ)
+          Some Ast.TypA(a1, a2), Some Ast.TypA(e1, e2) -> 
+            Sem_error.raise_invalid_assignment_type expr (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2))
+        | Some a_typ, Some e_typ when a_typ != e_typ -> 
+            Sem_error.raise_invalid_assignment_type expr a_typ e_typ
         | Some _, Some _ -> acc_typ
-        | _ -> raise(Semantic_error(
-          expr.loc, 
-          "Invalid assignment")
-        ))
+        | _ -> Sem_error.raise_invalid_assignment expr)
   | Ast.Addr acc -> 
     (match type_check_access acc with
       Some t -> Some (Ast.TypP(t))
-    | _ -> raise(Semantic_error(
-      expr.loc, 
-      "Invalid pointer type")
-    ))
+    | _ -> Sem_error.raise_invalid_pointer_type expr)
   | Ast.ILiteral _ -> Some Ast.TypI
   | Ast.CLiteral _ -> Some Ast.TypC
   | Ast.BLiteral _ -> Some Ast.TypB
@@ -110,7 +83,7 @@ let rec type_check_expr expr symbtbl =
       (match op, expr_typ with
         Neg, Some Ast.TypI -> Some Ast.TypI
       | Not, Some Ast.TypB -> Some Ast.TypB
-      | _ -> raise(Semantic_error(expr.loc, "Invalid unary operation")))
+      | _ -> Sem_error.raise_invalid_unary_op expr)
   | Ast.BinaryOp (op, left, right) -> 
       let left_typ = type_check_expr left symbtbl in
       let right_typ = type_check_expr right symbtbl in
@@ -123,10 +96,10 @@ let rec type_check_expr expr symbtbl =
         | Ast.And
         | Ast.Or -> Ast.TypB, Ast.TypB (* op between bools returns bool *)
         | _ -> Ast.TypI, Ast.TypB (* ints comparison returns bool *)
-      in if (left_typ = right_typ && left_typ = Some (fst op_type)) then Some (snd op_type) else raise(Semantic_error(
-        expr.loc, 
-        "Invalid binary operation")
-      )
+      in if (left_typ = right_typ && left_typ = Some (fst op_type)) then 
+          Some (snd op_type) 
+        else 
+          Sem_error.raise_invalid_binary_op expr
   | Ast.Call (ide, exprList) -> 
       match Symbol_table.lookup ide symbtbl with
         Some Function(_, _, ret_typ, formalsList) ->
@@ -134,30 +107,23 @@ let rec type_check_expr expr symbtbl =
             List.iter2 (fun ex formal ->
               let formal_typ = fst formal in
               (match type_check_expr ex symbtbl with
-                Some t when t = formal_typ -> ()
-                | Some t -> raise(Semantic_error(ex.loc, Printf.sprintf "Invalid argument, expected %s but found %s" (Ast_descr.descr_typ formal_typ) (Ast_descr.descr_typ t)))
-                | _ -> raise(Semantic_error(ex.loc, "Invalid argument")))
+                  Some t when t = formal_typ -> ()
+                | Some t -> Sem_error.raise_invalid_function_arg_type ex formal_typ t
+                | _ -> Sem_error.raise_invalid_argument ex)
             ) exprList formalsList;
             Some ret_typ
           with Invalid_argument _ -> 
             let declArgsLen = List.length formalsList in
             let callArgsLen = List.length exprList in
-            raise(Semantic_error(
-              expr.loc,
-              Printf.sprintf "Function '%s' expects %d arguments but here %d arguments are passed to it" 
-                              ide declArgsLen callArgsLen
-            )))
-      | _ -> raise(Semantic_error(
-          expr.loc,
-          Printf.sprintf "Missing declaration of function '%s'" ide
-        ))
+            Sem_error.raise_invalid_arguments_number expr ide declArgsLen callArgsLen)
+      | _ -> Sem_error.raise_missing_fun_declaration expr ide
 
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
     (match type_check_expr guard symbtbl with
       Some Ast.TypB -> ()
-    | None -> raise(Semantic_error(guard.loc, "Missing guard"))
-    | _ -> raise(Semantic_error(guard.loc, "Guard's type is not boolean"))
+    | None -> Sem_error.raise_missing_guard guard
+    | _ -> Sem_error.raise_invalid_guard_type guard
   ) in
   match stmt.node with 
     Ast.If (guard, thbr, elbr) ->
@@ -197,22 +163,20 @@ let rec type_check_stmt ret_typ stmt symbtbl =
         t::_  -> Some t
       | _     -> None)
   | Ast.Return None when ret_typ = Ast.TypV -> Some ret_typ
-  | Ast.Return None -> raise(Semantic_error(stmt.loc, "Missing return value"))
+  | Ast.Return None -> Sem_error.raise_missing_return_value stmt
   | Ast.Return (Some expr) -> 
       match type_check_expr expr symbtbl with
         Some expr_typ when expr_typ = ret_typ -> Some ret_typ
-      | _ -> raise(Semantic_error(stmt.loc, "Invalid return type"))
+      | _ -> Sem_error.raise_invalid_return_type stmt
 
-let type_check_function_decl loc fun_decl symbtbl =
-  st_add_symbol symbtbl (Function(loc, fun_decl.fname, fun_decl.typ, fun_decl.formals));
+let type_check_function_decl node fun_decl symbtbl =
+  st_add_symbol symbtbl (Function(node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals));
   Symbol_table.begin_block symbtbl;
   (* Add each formal to the symbol table *)
-  List.iter (fun arg -> st_add_symbol symbtbl (Variable(loc, snd arg, fst arg))) fun_decl.formals;
+  List.iter (fun arg -> st_add_symbol symbtbl (Variable(node.loc, snd arg, fst arg))) fun_decl.formals;
   (* Check function body *)
   (match type_check_stmt fun_decl.typ fun_decl.body symbtbl with
-      None when fun_decl.typ != Ast.TypV -> raise(Semantic_error(
-        loc, "Missing return statement")
-      )
+      None when fun_decl.typ != Ast.TypV -> Sem_error.raise_missing_return node
     | _ -> ()
   );
   Symbol_table.end_block symbtbl
@@ -228,7 +192,7 @@ let type_check (Ast.Prog topdeclList) =
   List.iter (fun ann_node ->
     match ann_node.node with
         Ast.Vardec (typ, ide) -> st_add_symbol symbtbl (Variable(ann_node.loc, ide, typ))
-      | Ast.Fundecl fun_decl  -> type_check_function_decl ann_node.loc fun_decl symbtbl
+      | Ast.Fundecl fun_decl  -> type_check_function_decl ann_node fun_decl symbtbl
   ) topdeclList;
   (* Finally return AST *)
   Ast.Prog topdeclList

@@ -20,7 +20,7 @@ let () =
 				let error_pos = Microc.Errors.SingleLine(pos) in
 				Microc.Errors.report_error "Syntax error" input_channel stdout error_pos msg;
 				close_in input_channel;
-		| Microc.Semantic_analysis.Semantic_error (pos, msg) -> 
+		| Microc.Sem_error.Semantic_error (pos, msg) -> 
 				let error_pos = Microc.Errors.Multiline(pos) in
 				Microc.Errors.report_error "Syntax error" input_channel stdout error_pos msg;
 				close_in input_channel;
