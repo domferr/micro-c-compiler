@@ -83,10 +83,18 @@ let rec type_check_expr expr symbtbl =
   | Ast.Assign (acc, ex) -> 
       let acc_typ = type_check_access acc in
       let exp_typ = type_check_expr ex symbtbl in
-      if acc_typ = exp_typ then acc_typ else raise(Semantic_error(
+      let assign_err left_typ right_typ = Semantic_error(
         expr.loc, 
-        "Invalid assignment")
-      )
+        Printf.sprintf "Invalid assignment of %s to %s" (Ast_descr.descr_typ right_typ) (Ast_descr.descr_typ left_typ))
+      in
+      (match acc_typ, exp_typ with
+          Some Ast.TypA(a1, a2), Some Ast.TypA(e1, e2) -> raise(assign_err (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2)))
+        | Some a_typ, Some e_typ when a_typ != e_typ -> raise(assign_err a_typ e_typ)
+        | Some _, Some _ -> acc_typ
+        | _ -> raise(Semantic_error(
+          expr.loc, 
+          "Invalid assignment")
+        ))
   | Ast.Addr acc -> 
     (match type_check_access acc with
       Some t -> Some (Ast.TypP(t))
@@ -127,12 +135,13 @@ let rec type_check_expr expr symbtbl =
               let formal_typ = fst formal in
               (match type_check_expr ex symbtbl with
                 Some t when t = formal_typ -> ()
-              | _ -> raise(Semantic_error(ex.loc, "Invalid argument")))
+                | Some t -> raise(Semantic_error(ex.loc, Printf.sprintf "Invalid argument, expected %s but found %s" (Ast_descr.descr_typ formal_typ) (Ast_descr.descr_typ t)))
+                | _ -> raise(Semantic_error(ex.loc, "Invalid argument")))
             ) exprList formalsList;
             Some ret_typ
           with Invalid_argument _ -> 
             let declArgsLen = List.length formalsList in
-            let callArgsLen = List.length formalsList in
+            let callArgsLen = List.length exprList in
             raise(Semantic_error(
               expr.loc,
               Printf.sprintf "Function '%s' expects %d arguments but here %d arguments are passed to it" 
@@ -148,7 +157,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
     (match type_check_expr guard symbtbl with
       Some Ast.TypB -> ()
     | None -> raise(Semantic_error(guard.loc, "Missing guard"))
-    | _ -> raise(Semantic_error(guard.loc, "Guard type is not boolean"))
+    | _ -> raise(Semantic_error(guard.loc, "Guard's type is not boolean"))
   ) in
   match stmt.node with 
     Ast.If (guard, thbr, elbr) ->
