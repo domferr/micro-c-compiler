@@ -69,3 +69,9 @@ test-symbol-table: ## Test the symbol table
 .PHONY: test-semantic
 test-semantic: ## Test all the test sources
 	@./tester.sh test/semant_test.exe ${TEST_SOURCES}
+
+.PHONY: clang
+clang:
+	@cp $(ARGS) $(ARGS:.mc=.c)
+	clang $(ARGS:.mc=.c) -fsyntax-only || true
+	@rm $(ARGS:.mc=.c)
