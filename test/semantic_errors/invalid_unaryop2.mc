@@ -1,5 +1,5 @@
 void main() {
     char a;
     int c;
-    c = -a;
+    c = -a; /* Use of '-' on char */
 }

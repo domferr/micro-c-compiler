@@ -1,3 +1,3 @@
 void main() {
-    b = true;
+    b = true; /* missing previous declaration of 'b' */
 }

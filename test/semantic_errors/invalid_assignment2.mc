@@ -1,4 +1,4 @@
 void main() {
     int a;
-    a = 'c';
+    a = 'c'; /* cannot assign char to int */
 }

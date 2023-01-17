@@ -3,5 +3,5 @@ void foo(int a) {
 }
 
 int main() {
-    foo();
+    foo(); /* foo requires one int argument but nothing is given */
 }

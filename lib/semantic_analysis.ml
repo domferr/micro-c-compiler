@@ -1,11 +1,13 @@
 open Ast
 
+(* Definition of symbol, which is added into the symbol table *)
 type symbol = 
   (* variable pos, name, variable type *)
     Variable of Location.code_pos * Ast.identifier * Ast.typ 
   (* function pos, name, return type, list of formals *)
   | Function of Location.code_pos * string * Ast.typ * (Ast.typ * Ast.identifier) list
 
+(* Function to add the symbol into the symbol table *)
 let st_add_symbol tbl new_symbol =
   let loc_and_ide = match new_symbol with
       Variable (loc, ide, _)       -> (loc, ide)
@@ -16,20 +18,22 @@ let st_add_symbol tbl new_symbol =
   with
     | Symbol_table.DuplicateEntry(entry) -> Sem_error.raise_duplicate_declaration (fst loc_and_ide) entry
 
+(* List of run-time support functions *)
 let rt_support_functions = [
   "print", Function(
     Location.dummy_code_pos, 
-    "print", 
-    Ast.TypV, 
-    [(Ast.TypI, "num")]
+    "print", (* function name is "print" *)
+    Ast.TypV, (* returns void *)
+    [(Ast.TypI, "num")] (* an integer as arg *)
   );
   "getint", Function(
     Location.dummy_code_pos, 
-    "getint", 
-    Ast.TypI, 
-    []
+    "getint", (* function name is "getint" *)
+    Ast.TypI, (* returns int *)
+    [] (* No args *)
 )]
 
+(* A pass to check if the main function is defined properly *)
 let check_main_function_pass topdeclList =
   let checker ann_node =
     match ann_node.node with
@@ -42,6 +46,7 @@ let check_main_function_pass topdeclList =
   let has_main = List.exists checker topdeclList in
   if has_main then () else Sem_error.raise_missing_main_definition()
 
+(* Type checker function for expr *)
 let rec type_check_expr expr symbtbl =
   let rec type_check_access acc = match acc.node with
     Ast.AccVar ide -> 
@@ -120,6 +125,7 @@ let rec type_check_expr expr symbtbl =
             Sem_error.raise_invalid_arguments_number expr ide declArgsLen callArgsLen)
       | _ -> Sem_error.raise_missing_fun_declaration expr ide
 
+(* Type checker function for stmt *)
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
     (match type_check_expr guard symbtbl with
@@ -171,6 +177,8 @@ let rec type_check_stmt ret_typ stmt symbtbl =
         Some expr_typ when expr_typ = ret_typ -> Some ret_typ
       | _ -> Sem_error.raise_invalid_return_type stmt
 
+(* Type checker for function declaration. For each function declared, it will type check 
+   its formals and body *)
 let type_check_function_decl node fun_decl symbtbl =
   st_add_symbol symbtbl (Function(node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals));
   (* Add each formal to the symbol table *)
@@ -180,8 +188,8 @@ let type_check_function_decl node fun_decl symbtbl =
       None when fun_decl.typ != Ast.TypV -> Sem_error.raise_missing_return node
     | _ -> ()
 
-
 (* TODO: check that global variables are initialized with constant values *)
+(* Entry point for semantic analysis *)
 let type_check (Ast.Prog topdeclList) =
   let symbtbl = Symbol_table.empty_table() in
   (* Check main function and its return type *)

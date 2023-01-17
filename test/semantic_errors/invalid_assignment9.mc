@@ -1,5 +1,5 @@
 void main() {
     int *p;
     bool b;
-    b = *p;
+    b = *p; /* cannot assign pointed int to bool */
 }

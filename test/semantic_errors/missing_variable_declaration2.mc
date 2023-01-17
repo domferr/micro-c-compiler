@@ -1,4 +1,4 @@
 void main() {
     bool b;
-    b = var;
+    b = var; /* missing previous declaration of 'var' */
 }

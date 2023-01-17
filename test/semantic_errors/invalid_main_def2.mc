@@ -1,9 +1,4 @@
-int global1;
-int test(bool b, int c) {
-    return 10 + b;
-}
-
-int main(int a) {
+int main(int a) { /* not valid parameter */
     bool b;
     b = false;
     int a[];

@@ -1,7 +1,8 @@
 int main() {
-    if (b) {
-        return;
+    bool b;
+    if (b) { 
+        return; /* missing return value */
     } else {
-        return;
+        return 1;
     }
 }

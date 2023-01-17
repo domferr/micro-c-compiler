@@ -1,3 +1,3 @@
-bool main() {
+bool main() { /* main cannot return bool */
     
 }

@@ -1,5 +1,5 @@
 void main() {
     int a;
     bool c;
-    c = !a;
+    c = !a; /* cannot negate int */
 }

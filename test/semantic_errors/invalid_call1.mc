@@ -1,3 +1,3 @@
 int main() {
-    foo();
+    foo(); /* foo not declared */
 }

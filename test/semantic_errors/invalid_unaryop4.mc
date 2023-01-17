@@ -1,5 +1,5 @@
 void main() {
     char a;
     bool c;
-    c = !a;
+    c = !a; /* cannot negate char */
 }

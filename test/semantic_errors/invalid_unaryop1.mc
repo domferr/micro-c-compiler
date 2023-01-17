@@ -1,5 +1,5 @@
 void main() {
     bool a;
     int c;
-    c = -a;
+    c = -a; /* Use of '-' on boolean */
 }

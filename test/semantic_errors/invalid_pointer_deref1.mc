@@ -1,5 +1,5 @@
 void main() {
     int p;
     int b;
-    b = *p;
+    b = *p;  /* p is not a pointer */
 }

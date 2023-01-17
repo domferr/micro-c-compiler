@@ -1,4 +1,4 @@
 void main() {
     bool b;
-    b = 'c';
+    b = 'c'; /* cannot assign char to bool */
 }

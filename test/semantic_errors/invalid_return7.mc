@@ -3,5 +3,5 @@ bool foo() {
 }
 
 int main() {
-    return foo();
+    return foo(); /* foo returns boolean, not int */
 }

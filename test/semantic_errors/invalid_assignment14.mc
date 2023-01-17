@@ -4,5 +4,5 @@ void foo() {
 
 void main() {
     int a;
-    a = foo();
+    a = foo(); /* cannot assign void to int */
 }
