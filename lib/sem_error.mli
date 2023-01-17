@@ -22,3 +22,4 @@ val raise_invalid_guard_type: 'a Ast.annotated_node -> 'b
 val raise_missing_return_value: 'a Ast.annotated_node -> 'b
 val raise_invalid_return_type: 'a Ast.annotated_node -> 'b
 val raise_missing_return: 'a Ast.annotated_node -> 'b
+val raise_missing_array_size: 'a Ast.annotated_node -> 'b

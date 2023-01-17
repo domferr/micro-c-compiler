@@ -157,6 +157,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
       let ret_list = List.filter_map (fun ann_node ->
         match ann_node.node with
           Ast.Stmt stmt -> type_check_stmt ret_typ stmt symbtbl
+        | Ast.Dec (Ast.TypA(_, None), _)  -> Sem_error.raise_missing_array_size ann_node
         | Ast.Dec (typ, ide) -> 
           st_add_symbol symbtbl (Variable(ann_node.loc, ide, typ));
           None

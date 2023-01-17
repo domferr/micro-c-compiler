@@ -100,3 +100,7 @@ let raise_invalid_return_type node = raise(Semantic_error(node.loc,
 let raise_missing_return node = raise(Semantic_error(node.loc, 
   "Missing return statement"
 ))
+
+let raise_missing_array_size node = raise(Semantic_error(node.loc, 
+  "Cannot declare array without a size"
+))
