@@ -46,21 +46,21 @@ let check_main_function_pass topdeclList =
   let has_main = List.exists checker topdeclList in
   if has_main then () else Sem_error.raise_missing_main_definition()
 
-(* Type checker function for expr *)
+(* Type checker function for expr. Returns the expression type *)
 let rec type_check_expr expr symbtbl =
   let rec type_check_access acc = match acc.node with
     Ast.AccVar ide -> 
       (match Symbol_table.lookup ide symbtbl with
-          Some Variable(_, _, t) -> Some t
+          Some Variable(_, _, t) -> t
         | _ -> Sem_error.raise_variable_not_declared acc ide)
   | Ast.AccDeref e -> 
     (match type_check_expr e symbtbl with
-        Some (Ast.TypP(t)) -> Some t
+        (Ast.TypP(t)) -> t
       | _ -> Sem_error.raise_invalid_pointer_deref acc)
   | Ast.AccIndex (accArr, e) -> (match type_check_access accArr with
-      Some (Ast.TypA(t, _)) -> 
+      (Ast.TypA(t, _)) -> 
         (match type_check_expr e symbtbl with
-            Some Ast.TypI -> Some t
+            Ast.TypI -> t
           | _ -> Sem_error.raise_invalid_array_index_type acc)
     | _ -> Sem_error.raise_invalid_array_index acc)
   in 
@@ -70,24 +70,20 @@ let rec type_check_expr expr symbtbl =
       let acc_typ = type_check_access acc in
       let exp_typ = type_check_expr ex symbtbl in
       (match acc_typ, exp_typ with
-          Some Ast.TypA(a1, a2), Some Ast.TypA(e1, e2) -> 
+          Ast.TypA(a1, a2), Ast.TypA(e1, e2) -> 
             Sem_error.raise_invalid_assignment_type expr (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2))
-        | Some a_typ, Some e_typ when a_typ != e_typ -> 
+        | a_typ, e_typ when a_typ != e_typ -> 
             Sem_error.raise_invalid_assignment_type expr a_typ e_typ
-        | Some _, Some _ -> acc_typ
-        | _ -> Sem_error.raise_invalid_assignment expr)
-  | Ast.Addr acc -> 
-    (match type_check_access acc with
-      Some t -> Some (Ast.TypP(t))
-    | _ -> Sem_error.raise_invalid_pointer_type expr)
-  | Ast.ILiteral _ -> Some Ast.TypI
-  | Ast.CLiteral _ -> Some Ast.TypC
-  | Ast.BLiteral _ -> Some Ast.TypB
+        | _, _ -> acc_typ)
+  | Ast.Addr acc -> Ast.TypP(type_check_access acc)
+  | Ast.ILiteral _ -> Ast.TypI
+  | Ast.CLiteral _ -> Ast.TypC
+  | Ast.BLiteral _ -> Ast.TypB
   | Ast.UnaryOp (op, ex) -> 
       let expr_typ = type_check_expr ex symbtbl in
       (match op, expr_typ with
-        Neg, Some Ast.TypI -> Some Ast.TypI
-      | Not, Some Ast.TypB -> Some Ast.TypB
+        Neg, Ast.TypI -> Ast.TypI
+      | Not, Ast.TypB -> Ast.TypB
       | _ -> Sem_error.raise_invalid_unary_op expr)
   | Ast.BinaryOp (op, left, right) -> 
       let left_typ = type_check_expr left symbtbl in
@@ -101,8 +97,8 @@ let rec type_check_expr expr symbtbl =
         | Ast.And
         | Ast.Or -> Ast.TypB, Ast.TypB (* op between bools returns bool *)
         | _ -> Ast.TypI, Ast.TypB (* ints comparison returns bool *)
-      in if (left_typ = right_typ && left_typ = Some (fst op_type)) then 
-          Some (snd op_type) 
+      in if (left_typ = right_typ && left_typ = (fst op_type)) then 
+          (snd op_type) 
         else 
           Sem_error.raise_invalid_binary_op expr
   | Ast.Call (ide, exprList) -> 
@@ -113,24 +109,22 @@ let rec type_check_expr expr symbtbl =
               let formal_typ = fst formal in
               let given_typ = type_check_expr ex symbtbl in
               (match given_typ, formal_typ with
-                  Some Ast.TypA(t1, _), Ast.TypA(t2, _) when t1 = t2 -> ()
-                | Some t1, t2 when t1 = t2 -> ()
-                | Some t1, t2 -> Printf.printf "%s:%s\n" (Ast.show_typ t1) (Ast.show_typ t2); Sem_error.raise_invalid_function_arg_type ex t2 t1
-                | _ -> Sem_error.raise_invalid_argument ex)
+                  Ast.TypA(t1, _), Ast.TypA(t2, _) when t1 = t2 -> ()
+                | t1, t2 when t1 = t2 -> ()
+                | t1, t2 -> Printf.printf "%s:%s\n" (Ast.show_typ t1) (Ast.show_typ t2); Sem_error.raise_invalid_function_arg_type ex t2 t1)
             ) exprList formalsList;
-            Some ret_typ
+            ret_typ
           with Invalid_argument _ -> 
             let declArgsLen = List.length formalsList in
             let callArgsLen = List.length exprList in
             Sem_error.raise_invalid_arguments_number expr ide declArgsLen callArgsLen)
       | _ -> Sem_error.raise_missing_fun_declaration expr ide
 
-(* Type checker function for stmt *)
+(* Type checker function for stmt. Returns the statement type, if any *)
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
     (match type_check_expr guard symbtbl with
-      Some Ast.TypB -> ()
-    | None -> Sem_error.raise_missing_guard guard
+      Ast.TypB -> ()
     | _ -> Sem_error.raise_invalid_guard_type guard
   ) in
   match stmt.node with 
@@ -157,7 +151,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
       let while_ret = type_check_stmt ret_typ stmt symbtbl in
       Symbol_table.end_block symbtbl;
       while_ret
-  | Ast.Expr e -> type_check_expr e symbtbl
+  | Ast.Expr e -> Some (type_check_expr e symbtbl)
   | Ast.Block stmtordecList -> 
       Symbol_table.begin_block symbtbl;
       let ret_list = List.filter_map (fun ann_node ->
@@ -174,7 +168,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
   | Ast.Return None -> Sem_error.raise_missing_return_value stmt
   | Ast.Return (Some expr) -> 
       match type_check_expr expr symbtbl with
-        Some expr_typ when expr_typ = ret_typ -> Some ret_typ
+        expr_typ when expr_typ = ret_typ -> Some ret_typ
       | _ -> Sem_error.raise_invalid_return_type stmt
 
 (* Type checker for function declaration. For each function declared, it will type check 
@@ -188,7 +182,6 @@ let type_check_function_decl node fun_decl symbtbl =
       None when fun_decl.typ != Ast.TypV -> Sem_error.raise_missing_return node
     | _ -> ()
 
-(* TODO: check that global variables are initialized with constant values *)
 (* Entry point for semantic analysis *)
 let type_check (Ast.Prog topdeclList) =
   let symbtbl = Symbol_table.empty_table() in
