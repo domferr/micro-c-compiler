@@ -33,6 +33,7 @@
 %token <char> CHARACTER
 /* Operators */
 %token ADD SUB MULT DIV MOD ASSIGN
+%token SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV
 %token EQ GT LT GEQ LEQ NEQ
 %token OR AND NOT
 /* Other symbols */
@@ -67,7 +68,7 @@
 %nonassoc THEN
 %nonassoc ELSE
 
-%right ASSIGN         /* lowest precedence */
+%right ASSIGN SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV /* lowest precedence */
 %left OR 
 %left AND 
 %left EQ NEQ
@@ -201,6 +202,10 @@ rexpr:
   | NOT e = expr            { Ast.UnaryOp(Ast.Not, e) }
   | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
   | expr binop expr         { Ast.BinaryOp($2, $1, $3) }
+  | lexpr shortop expr      {
+                              let leftExpr = build_node $loc (Ast.Access($1)) in
+                              Ast.Assign($1, build_node $loc (Ast.BinaryOp($2, leftExpr, $3)))
+                            }
 ;
 
 aexpr:
@@ -226,4 +231,12 @@ aexpr:
   | GT    { Ast.Greater }
   | LEQ   { Ast.Leq }
   | GEQ   { Ast.Geq }
+;
+
+%inline shortop:
+  | SHORTADD  { Ast.Add } 
+  | SHORTSUB  { Ast.Sub }
+  | SHORTMULT { Ast.Mult }
+  | SHORTMOD  { Ast.Mod }
+  | SHORTDIV  { Ast.Div }
 ;

@@ -23,8 +23,8 @@
 			("for", 	FOR);
 			("while", 	WHILE);
 			("return", 	RETURN);
-			("true"), BOOLEAN(true);
-			("false"), BOOLEAN(false)
+			("true"), 	BOOLEAN(true);
+			("false"), 	BOOLEAN(false)
 		]
 	
 	(* special characters are \', \b, \f, \t, \\, \r, and \n *)
@@ -61,6 +61,11 @@ rule next_token = parse
 	| "'" 		{ readchar lexbuf }
 	| "true"	{ BOOLEAN(true) }
 	| "false"	{ BOOLEAN(false) }
+	| "+="		{ SHORTADD }
+	| "-="		{ SHORTSUB }
+	| "*="		{ SHORTMULT }
+	| "%="		{ SHORTMOD }
+	| "/="		{ SHORTDIV }
 	| '+'		{ ADD }
 	| '-'		{ SUB }
 	| '*'		{ MULT }
