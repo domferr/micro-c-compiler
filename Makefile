@@ -33,7 +33,23 @@ update-parser-messages:
 	    --update-errors lib/parserMessages.messages \
 	    > lib/parserMessages.updated
 	mv lib/parserMessages.updated lib/parserMessages.messages
- 
+
+.PHONY: merge-parser-messages
+merge-parser-messages:
+	opam exec -- dune exec menhir -- lib/parser.mly \
+	    --list-errors \
+	    > lib/parserMessages.auto.messages
+	opam exec -- dune exec menhir -- lib/parser.mly \
+	    --merge-errors lib/parserMessages.auto.messages \
+	    --merge-errors lib/parserMessages.messages \
+	    > lib/parserMessages.merged
+	mv lib/parserMessages.merged lib/parserMessages.messages
+	rm -f lib/parserMessages.auto.messages
+
+.PHONY: strip-parser-messages
+strip-parser-messages:
+	@ sed -e "/^##/d" -i.bak parserMessages.messages
+
 .PHONY: clean
 clean: ## Clean build artifacts and other generated files
 	opam exec -- dune clean --root .

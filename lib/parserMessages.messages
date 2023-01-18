@@ -1,3 +1,9 @@
+
+
+
+
+
+
 program: WHILE
 ##
 ## Ends in an error in state: 0.
@@ -1685,4 +1691,3 @@ program: BOOL ID SEMICOL WHILE
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
-
