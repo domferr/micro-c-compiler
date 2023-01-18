@@ -45,7 +45,7 @@
 %token AMPERSAND
 /* Keywords */
 %token INT CHAR VOID BOOL NULL
-%token IF RETURN THEN ELSE FOR WHILE
+%token IF RETURN THEN ELSE FOR WHILE DO
 
 
 /* ------ Precedence and associativity specification ------ */
@@ -144,6 +144,14 @@ stmt:
   | WHILE cond = delimited(LPAREN, expr, RPAREN) body = stmt 
     { 
       build_node $loc (Ast.While(cond, body))
+    }
+  | DO body = stmt WHILE cond = delimited(LPAREN, expr, RPAREN) SEMICOL
+    { 
+      let while_node = build_node $loc (Ast.While(cond, body)) in (* while -> stmt *)
+      build_node $loc (Ast.Block([
+        build_node $loc (Ast.Stmt(body));          (* stmt -> stmtordec *)
+        build_node $loc (Ast.Stmt(while_node))     (* stmt -> stmtordec *)
+      ]))
     }
   | FOR LPAREN init = option(expr) SEMICOL cond = option(expr) SEMICOL incr = option(expr) RPAREN body = stmt  
     { 
