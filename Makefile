@@ -78,13 +78,16 @@ utop: ## Run a REPL and link with the project's libraries
 test-parser: ## Test all the test sources
 	@./tester.sh test/parser_test.exe ${TEST_SOURCES}
 
-.PHONY: test-symbol-table
-test-symbol-table: ## Test the symbol table
-	opam exec -- dune exec test/symbol_table_test.exe
-
 .PHONY: test-semantic
 test-semantic: ## Test all the test sources
 	@./tester.sh test/semant_test.exe ${TEST_SOURCES}
+
+.PHONY: unit-test-symbol-table
+unit-test-symbol-table: ## Test the symbol table
+	opam exec -- dune exec test/unit_tests/symbol_table_unit_test.exe
+
+.PHONY: unit-test
+unit-test: unit-test-symbol-table ## Run all the unit tests
 
 .PHONY: clang
 clang:

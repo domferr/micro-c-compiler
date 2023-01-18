@@ -13,11 +13,3 @@
   (modules semant_test)
   (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
-
-(executable
-  (name symbol_table_test)
-  (public_name symbol_table_test)
-  (libraries microc)
-  (modules symbol_table_test)
-  (preprocess
-  (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
