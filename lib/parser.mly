@@ -34,6 +34,7 @@
 /* Operators */
 %token ADD SUB MULT DIV MOD ASSIGN
 %token SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV
+%token INCREMENT DECREMENT
 %token EQ GT LT GEQ LEQ NEQ
 %token OR AND NOT
 /* Other symbols */
@@ -206,6 +207,10 @@ rexpr:
                               let leftExpr = build_node $loc (Ast.Access($1)) in
                               Ast.Assign($1, build_node $loc (Ast.BinaryOp($2, leftExpr, $3)))
                             }
+  | INCREMENT lexpr         { Ast.UnaryOp(Ast.PreIncr, build_node $loc (Ast.Access($2))) }
+  | DECREMENT lexpr         { Ast.UnaryOp(Ast.PreDecr, build_node $loc (Ast.Access($2))) }
+  | lexpr INCREMENT         { Ast.UnaryOp(Ast.PostIncr, build_node $loc (Ast.Access($1))) }
+  | lexpr DECREMENT         { Ast.UnaryOp(Ast.PostDecr, build_node $loc (Ast.Access($1))) }
 ;
 
 aexpr:

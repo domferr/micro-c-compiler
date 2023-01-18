@@ -14,7 +14,15 @@ type binop =
   | Or
 [@@deriving show]
 
-type uop = Neg | Not [@@deriving show]
+type uop = 
+    Neg 
+  | Not
+  | PreIncr
+  | PostIncr
+  | PreDecr
+  | PostDecr
+[@@deriving show]
+
 type identifier = string [@@deriving show]
 
 type 'a annotated_node = {

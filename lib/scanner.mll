@@ -61,6 +61,8 @@ rule next_token = parse
 	| "'" 		{ readchar lexbuf }
 	| "true"	{ BOOLEAN(true) }
 	| "false"	{ BOOLEAN(false) }
+	| "++"		{ INCREMENT }
+	| "--"		{ DECREMENT }
 	| "+="		{ SHORTADD }
 	| "-="		{ SHORTSUB }
 	| "*="		{ SHORTMULT }

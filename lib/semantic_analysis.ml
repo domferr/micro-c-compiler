@@ -82,8 +82,12 @@ let rec type_check_expr expr symbtbl =
   | Ast.UnaryOp (op, ex) -> 
       let expr_typ = type_check_expr ex symbtbl in
       (match op, expr_typ with
-        Neg, Ast.TypI -> Ast.TypI
-      | Not, Ast.TypB -> Ast.TypB
+        Neg, Ast.TypI 
+      | PreIncr, Ast.TypI
+      | PostIncr, Ast.TypI
+      | PreDecr, Ast.TypI
+      | PostDecr, Ast.TypI -> Ast.TypI (* op between ints returns int *)
+      | Not, Ast.TypB -> Ast.TypB (* negating a bool returns bool *)
       | _ -> Sem_error.raise_invalid_unary_op expr)
   | Ast.BinaryOp (op, left, right) -> 
       let left_typ = type_check_expr left symbtbl in
