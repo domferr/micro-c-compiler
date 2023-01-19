@@ -29,7 +29,6 @@
   ))
 )
 
-
 ;; In order to perform the completeness check, we must first generate a file
 ;; "parserMessages.auto.messages" that contains a list of all error states.
 

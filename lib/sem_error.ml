@@ -36,12 +36,13 @@ let raise_invalid_array_index node = raise(Semantic_error(node.loc,
 ))
 
 let descr_typ typ = match typ with
-    Ast.TypI -> "integer"
-  | Ast.TypB -> "boolean"
-  | Ast.TypC -> "char"
-  | Ast.TypV -> "void"
-  | Ast.TypA _ -> "array"
-  | Ast.TypP _ -> "pointer"
+    Ast.TypI    -> "integer"
+  | Ast.TypB    -> "boolean"
+  | Ast.TypC    -> "char"
+  | Ast.TypV    -> "void"
+  | Ast.TypA _  -> "array"
+  | Ast.TypP _  -> "pointer"
+  | Ast.TypNull -> "null"
 
 let raise_invalid_assignment_type node left_typ right_typ = raise(Semantic_error(
   node.loc, 

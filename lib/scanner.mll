@@ -13,7 +13,7 @@
 		tbl
 	
 	let keywords_table =
-		create_hashtable 12 [
+		create_hashtable 13 [
 			("int", 	INT);
 			("char", 	CHAR);
 			("bool", 	BOOL);
@@ -25,7 +25,8 @@
 			("return", 	RETURN);
 			("true", 	BOOLEAN(true));
 			("false", 	BOOLEAN(false));
-			("do", 		DO)
+			("do", 		DO);
+			("NULL", 	NULL)
 		]
 	
 	(* special characters are \', \b, \f, \t, \\, \r, and \n *)

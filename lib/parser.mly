@@ -225,7 +225,7 @@ aexpr:
     INTEGER               { Ast.ILiteral($1) }
   | CHARACTER             { Ast.CLiteral($1) }
   | BOOLEAN               { Ast.BLiteral($1) }
-  //| NULL
+  | NULL                  { Ast.Null }
   | LPAREN rexpr RPAREN   { $2 }
   | AMPERSAND lexpr       { Ast.Addr($2) }
 ;

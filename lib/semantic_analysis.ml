@@ -72,13 +72,15 @@ let rec type_check_expr expr symbtbl =
       (match acc_typ, exp_typ with
           Ast.TypA(a1, a2), Ast.TypA(e1, e2) -> 
             Sem_error.raise_invalid_assignment_type expr (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2))
+        | Ast.TypP _, Ast.TypNull -> acc_typ
         | a_typ, e_typ when a_typ != e_typ -> 
             Sem_error.raise_invalid_assignment_type expr a_typ e_typ
         | _, _ -> acc_typ)
-  | Ast.Addr acc -> Ast.TypP(type_check_access acc)
-  | Ast.ILiteral _ -> Ast.TypI
-  | Ast.CLiteral _ -> Ast.TypC
-  | Ast.BLiteral _ -> Ast.TypB
+  | Ast.Addr acc    -> Ast.TypP(type_check_access acc)
+  | Ast.ILiteral _  -> Ast.TypI
+  | Ast.CLiteral _  -> Ast.TypC
+  | Ast.BLiteral _  -> Ast.TypB
+  | Ast.Null        -> Ast.TypNull
   | Ast.UnaryOp (op, ex) -> 
       let expr_typ = type_check_expr ex symbtbl in
       (match op, expr_typ with

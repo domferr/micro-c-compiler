@@ -38,6 +38,7 @@ type typ =
   | TypA of typ * int option (* Array type *)
   | TypP of typ (* Pointer type  *)
   | TypV (* Type void  *)
+  | TypNull (* Type of null  *)
 [@@deriving show]
 
 and expr = expr_node annotated_node
@@ -49,6 +50,7 @@ and expr_node =
   | ILiteral of int (* Integer literal  *)
   | CLiteral of char (* Char literal    *)
   | BLiteral of bool (* Bool literal    *)
+  | Null
   | UnaryOp of uop * expr (* Unary primitive operator  *)
   | BinaryOp of binop * expr * expr (* Binary primitive operator  *)
   | Call of identifier * expr list (* Function call f(...)    *)
