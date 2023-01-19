@@ -73,7 +73,9 @@ let rec type_check_expr expr symbtbl =
           Ast.TypA(a1, a2), Ast.TypA(e1, e2) -> 
             Sem_error.raise_invalid_assignment_type expr (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2))
         | Ast.TypP _, Ast.TypNull -> acc_typ
+        | Ast.TypP ptr1, Ast.TypP ptr2 when ptr1 = ptr2 -> acc_typ
         | a_typ, e_typ when a_typ != e_typ -> 
+            Printf.printf "%s, %s\n" (Ast.show_typ a_typ) (Ast.show_typ e_typ);
             Sem_error.raise_invalid_assignment_type expr a_typ e_typ
         | _, _ -> acc_typ)
   | Ast.Addr acc    -> Ast.TypP(type_check_access acc)

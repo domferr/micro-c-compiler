@@ -76,7 +76,7 @@
 %nonassoc GT LT GEQ LEQ
 %left ADD SUB 
 %left MULT DIV MOD
-%nonassoc NOT //AMPERSAND
+%nonassoc NOT AMPERSAND
 %nonassoc NEG
 %nonassoc LBRACKET    /* highest precedence  */
 
@@ -199,7 +199,10 @@ lexpr:
                                     let acc = build_node $loc (Ast.Access($2)) in
                                     build_node $loc (Ast.AccDeref(acc))
                                   }
-  //| "*" aexpr
+  | MULT AMPERSAND lexpr          { 
+                                    let acc = build_node $loc (Ast.Addr($3)) in
+                                    build_node $loc (Ast.AccDeref(acc))
+                                  }
   | lexpr LBRACKET expr RBRACKET  { build_node $loc (Ast.AccIndex($1, $3)) }
 ;
 
@@ -230,7 +233,7 @@ aexpr:
   | AMPERSAND lexpr       { Ast.Addr($2) }
 ;
 
-%inline binop: // inline because otherwise there are shift/reduce conflicts
+%inline binop: // inline to fix shift/reduce conflicts
     ADD   { Ast.Add }
   | SUB   { Ast.Sub }
   | MULT  { Ast.Mult }
