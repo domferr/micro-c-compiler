@@ -82,6 +82,10 @@ test-parser: ## Test all the test sources
 test-semantic: ## Test all the test sources
 	@./tester.sh test/semant_test.exe ${TEST_SOURCES}
 
+.PHONY: test-codegen
+test-codegen: ## Test all the test sources
+	@./tester.sh test/codegen_test.exe ${TEST_SOURCES}
+
 .PHONY: unit-test-symbol-table
 unit-test-symbol-table: ## Test the symbol table
 	opam exec -- dune exec test/unit_tests/symbol_table_unit_test.exe
