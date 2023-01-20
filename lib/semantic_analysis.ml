@@ -33,11 +33,24 @@ let rt_support_functions = [
     [] (* No args *)
 )]
 
+(* Checks whether variable type is compatible with assignment type and 
+   returns variable type, raises a Semantic_error exception otherwise *)
+let type_check_assign node acc_typ exp_typ = 
+  match acc_typ, exp_typ with
+    Ast.TypA(a1, a2), Ast.TypA(e1, e2) -> 
+      Sem_error.raise_invalid_assignment_type node (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2))
+  | Ast.TypP _, Ast.TypNull -> acc_typ
+  | Ast.TypP ptr1, Ast.TypP ptr2 when ptr1 = ptr2 -> acc_typ
+  | a_typ, e_typ when a_typ != e_typ -> 
+      Printf.printf "%s, %s\n" (Ast.show_typ a_typ) (Ast.show_typ e_typ);
+      Sem_error.raise_invalid_assignment_type node a_typ e_typ
+  | _, _ -> acc_typ
+
 (* A pass to check if the main function is defined properly *)
 let check_main_function_pass topdeclList =
   let checker ann_node =
     match ann_node.node with
-      Ast.Vardec (_, "main") -> Sem_error.raise_variable_main ann_node
+      Ast.Vardec { vname = "main"; _ } -> Sem_error.raise_variable_main ann_node
     | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; _ } -> true
     | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; _ } -> true
     | Ast.Fundecl { fname = "main"; _ } -> Sem_error.raise_invalid_def_main ann_node
@@ -69,15 +82,7 @@ let rec type_check_expr expr symbtbl =
   | Ast.Assign (acc, ex) -> 
       let acc_typ = type_check_access acc in
       let exp_typ = type_check_expr ex symbtbl in
-      (match acc_typ, exp_typ with
-          Ast.TypA(a1, a2), Ast.TypA(e1, e2) -> 
-            Sem_error.raise_invalid_assignment_type expr (Ast.TypA(a1, a2)) (Ast.TypA(e1, e2))
-        | Ast.TypP _, Ast.TypNull -> acc_typ
-        | Ast.TypP ptr1, Ast.TypP ptr2 when ptr1 = ptr2 -> acc_typ
-        | a_typ, e_typ when a_typ != e_typ -> 
-            Printf.printf "%s, %s\n" (Ast.show_typ a_typ) (Ast.show_typ e_typ);
-            Sem_error.raise_invalid_assignment_type expr a_typ e_typ
-        | _, _ -> acc_typ)
+      type_check_assign expr acc_typ exp_typ
   | Ast.Addr acc    -> Ast.TypP(type_check_access acc)
   | Ast.ILiteral _  -> Ast.TypI
   | Ast.CLiteral _  -> Ast.TypC
@@ -128,6 +133,15 @@ let rec type_check_expr expr symbtbl =
             Sem_error.raise_invalid_arguments_number expr ide declArgsLen callArgsLen)
       | _ -> Sem_error.raise_missing_fun_declaration expr ide
 
+(* Check if the variable declaration has an assignment aswell. If that's the
+   case it checks if the assignment is valid. Raises Semantic_error if the 
+    assignment's type check operation fails *)
+let type_check_var_decl typ initexpr symbtbl = 
+  match initexpr with
+      Some ex ->  let init_type = type_check_expr ex symbtbl in
+                  type_check_assign ex typ init_type
+    | None -> typ
+
 (* Type checker function for stmt. Returns the statement type, if any *)
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
@@ -165,9 +179,10 @@ let rec type_check_stmt ret_typ stmt symbtbl =
       let ret_list = List.filter_map (fun ann_node ->
         match ann_node.node with
           Ast.Stmt stmt -> type_check_stmt ret_typ stmt symbtbl
-        | Ast.Dec (Ast.TypA(_, None), _)  -> Sem_error.raise_missing_array_size ann_node
-        | Ast.Dec (typ, ide) -> 
-          st_add_symbol symbtbl (Variable(ann_node.loc, ide, typ));
+        | Ast.Dec { typ = Ast.TypA(_, None);  _ }  -> Sem_error.raise_missing_array_size ann_node 
+        | Ast.Dec { typ; vname; init } ->
+          type_check_var_decl typ init symbtbl |> ignore;
+          st_add_symbol symbtbl (Variable(ann_node.loc, vname, typ));          
           None
       ) stmtordecList in 
       (match ret_list with
@@ -201,7 +216,9 @@ let type_check (Ast.Prog topdeclList) =
   (* Analyze each top declaration *)
   List.iter (fun ann_node ->
     match ann_node.node with
-        Ast.Vardec (typ, ide) -> st_add_symbol symbtbl (Variable(ann_node.loc, ide, typ))
+        Ast.Vardec { typ; vname; init } -> 
+          type_check_var_decl typ init symbtbl |> ignore;
+          st_add_symbol symbtbl (Variable(ann_node.loc, vname, typ))
       | Ast.Fundecl fun_decl  -> type_check_function_decl ann_node fun_decl symbtbl
   ) topdeclList;
   (* Finally return AST *)

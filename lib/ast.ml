@@ -74,10 +74,17 @@ and stmt_node =
   | Block of stmtordec list (* Block: grouping and scope *)
 [@@deriving show]
 
+and var_decl = {
+  typ : typ;
+  vname : string;
+  init : expr option;
+}
+[@@deriving show]
+
 and stmtordec = stmtordec_node annotated_node
 
 and stmtordec_node =
-  | Dec of typ * identifier (* Local variable declaration  *)
+  | Dec of var_decl (* Local variable declaration  *)
   | Stmt of stmt (* A statement   *)
 [@@deriving show]
 
@@ -91,7 +98,7 @@ type fun_decl = {
 
 type topdecl = topdecl_node annotated_node
 
-and topdecl_node = Fundecl of fun_decl | Vardec of typ * identifier
+and topdecl_node = Fundecl of fun_decl | Vardec of var_decl
 [@@deriving show]
 
 type program = Prog of topdecl list [@@deriving show]

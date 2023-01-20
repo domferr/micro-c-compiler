@@ -94,9 +94,9 @@ program:
 topdecl:
     v = vardecl SEMICOL 
     { 
-      build_node $loc (Ast.Vardec( fst v, snd v )) 
+      build_node $loc (Ast.Vardec(v)) 
     }
-  | return_typ ID LPAREN form = separated_list(COMMA, vardecl) RPAREN b = block 
+  | return_typ ID LPAREN form = separated_list(COMMA, formal) RPAREN b = block 
     { 
       let block_node = build_node $loc b in 
       build_node $loc (Ast.Fundecl{ 
@@ -116,8 +116,12 @@ typ:
   | typ   { $1 }
 ;
 
-vardecl:
+formal:
     typ vardesc           { ((fst $2) $1, snd $2) }
+;
+
+vardecl:
+    typ vardesc init = option(preceded(ASSIGN, expr)) { { typ = (fst $2) $1; vname = snd $2; init; } }
 ;
 
 vardesc:
@@ -133,7 +137,7 @@ block:  // (stmt | vardecl SEMICOL)*
 ;
 
 stmtordec:
-    v = vardecl SEMICOL   { build_node $loc (Ast.Dec( fst v, snd v )) }
+    v = vardecl SEMICOL   { build_node $loc (Ast.Dec(v)) }
   | stmt                  { build_node $loc (Ast.Stmt($1)) }
 ;
 
