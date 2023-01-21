@@ -1,15 +1,5 @@
 open Microc
-
-(* ---------- UTILITY FUNCTIONS ---------- *)
-let print_test_failed testname =
-  let fail_color="\027[1;91m" in
-  let reset_color="\027[0m" in 
-  Printf.fprintf stdout "%s[ FAIL ]%s %s\n" fail_color reset_color testname
-
-let print_test_passed testname =
-  let pass_color="\027[1;92m" in
-  let reset_color="\027[0m" in 
-  Printf.fprintf stdout "%s[ PASS ]%s %s\n" pass_color reset_color testname
+open Utils
 
 (* Calls the given function and returns true if the function raises an 
    exception, false otherwise *)
@@ -179,40 +169,22 @@ let end_block_rebuild_level_test () =
   let _ = Symbol_table.begin_block tbl in
   assert_lookup "x" 1 tbl
 
-(* ------------- MAIN ENTRY POINT ------------- *)
-type test = {
-  func: unit -> bool;
-  name: string;
-}
-let () =
-  let testerFun test =
-    try
-    let res = test.func() in
-    if not res then 
-      print_test_failed test.name 
-    else 
-      print_test_passed test.name
-    with e -> 
-      print_test_failed test.name;
-      let msg = Printexc.to_string e
-      and stack = Printexc.get_backtrace () in
-        Printf.fprintf stdout "There was an error: %s%s\n\n" msg stack
-  in
+let run_tests =
   (* Run all the tests *)
-  List.iter testerFun [
-    { name = "Empty table"; func = empty_table_test };
-    { name = "Table from list"; func = of_alist_test };
-    { name = "Table from list with duplicate entries"; func = of_alist_duplicate_entry_test };
-    { name = "Table from empty list"; func = of_alist_empty_test };
-    { name = "Add entry"; func = add_entry_simple_test };
-    { name = "Add duplicate entry"; func = add_entry_duplicate_test };
-    { name = "Begin block"; func = begin_block_simple_test };
-    { name = "Lookup"; func = lookup_simple_test };
-    { name = "Lookup into empty table"; func = lookup_empty_test };
-    { name = "Lookup into a table with some blocks"; func = lookup_with_blocks_test };
-    { name = "End block"; func = end_block_lookup_test };
-    { name = "End block and lookup with multiple blocks"; func = end_block_lookup_multiple_blocks_test };
-    { name = "End block with empty table"; func = end_block_empty_table_test };
-    { name = "End block with a table of one level"; func = end_block_one_level_table_test };
-    { name = "Ensure there isn't any data after ending block and recreating a new block at the same level"; func = end_block_rebuild_level_test };
+  List.map Utils.testerFun [
+    { name = "Empty table"; func = empty_table_test; reqResult = true };
+    { name = "Table from list"; func = of_alist_test; reqResult = true };
+    { name = "Table from list with duplicate entries"; func = of_alist_duplicate_entry_test; reqResult = true };
+    { name = "Table from empty list"; func = of_alist_empty_test; reqResult = true };
+    { name = "Add entry"; func = add_entry_simple_test; reqResult = true };
+    { name = "Add duplicate entry"; func = add_entry_duplicate_test; reqResult = true };
+    { name = "Begin block"; func = begin_block_simple_test; reqResult = true };
+    { name = "Lookup"; func = lookup_simple_test; reqResult = true };
+    { name = "Lookup into empty table"; func = lookup_empty_test; reqResult = true };
+    { name = "Lookup into a table with some blocks"; func = lookup_with_blocks_test; reqResult = true };
+    { name = "End block"; func = end_block_lookup_test; reqResult = true };
+    { name = "End block and lookup with multiple blocks"; func = end_block_lookup_multiple_blocks_test; reqResult = true };
+    { name = "End block with empty table"; func = end_block_empty_table_test; reqResult = true };
+    { name = "End block with a table of one level"; func = end_block_one_level_table_test; reqResult = true };
+    { name = "Ensure there isn't any data after ending block and recreating a new block at the same level"; func = end_block_rebuild_level_test; reqResult = true };
   ]

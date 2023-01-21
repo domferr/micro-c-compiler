@@ -42,7 +42,6 @@ let type_check_assign node acc_typ exp_typ =
   | Ast.TypP _, Ast.TypNull -> acc_typ
   | Ast.TypP ptr1, Ast.TypP ptr2 when ptr1 = ptr2 -> acc_typ
   | a_typ, e_typ when a_typ != e_typ -> 
-      Printf.printf "%s, %s\n" (Ast.show_typ a_typ) (Ast.show_typ e_typ);
       Sem_error.raise_invalid_assignment_type node a_typ e_typ
   | _, _ -> acc_typ
 
@@ -125,7 +124,7 @@ let rec type_check_expr expr symbtbl =
               (match given_typ, formal_typ with
                   Ast.TypA(t1, _), Ast.TypA(t2, _) when t1 = t2 -> ()
                 | t1, t2 when t1 = t2 -> ()
-                | t1, t2 -> Printf.printf "%s:%s\n" (Ast.show_typ t1) (Ast.show_typ t2); Sem_error.raise_invalid_function_arg_type ex t2 t1)
+                | t1, t2 -> Sem_error.raise_invalid_function_arg_type ex t2 t1)
             ) exprList formalsList;
             ret_typ
           with Invalid_argument _ -> 

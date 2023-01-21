@@ -1,7 +1,7 @@
 (executable
-  (name symbol_table_unit_test)
-  (public_name symbol_table_unit_test)
+  (name unit_tests)
+  (public_name unit_tests)
   (libraries microc)
-  (modules symbol_table_unit_test)
+  (modules unit_tests utils parser_unit_test symbol_table_unit_test semantic_analysis_unit_test)
   (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
