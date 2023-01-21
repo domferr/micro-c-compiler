@@ -98,7 +98,7 @@ topdecl:
     }
   | return_typ ID LPAREN form = separated_list(COMMA, formal) RPAREN b = block 
     { 
-      let block_node = build_node $loc b in 
+      let block_node = build_node $loc(b) b in 
       build_node $loc (Ast.Fundecl{ 
         typ = $1; fname = $2; formals = form; body = block_node 
       })
@@ -153,7 +153,7 @@ stmt:
     { 
       let while_node = build_node $loc (Ast.While(cond, body)) in (* while -> stmt *)
       build_node $loc (Ast.Block([
-        build_node $loc (Ast.Stmt(body));          (* stmt -> stmtordec *)
+        build_node $loc(body) (Ast.Stmt(body));    (* stmt -> stmtordec *)
         build_node $loc (Ast.Stmt(while_node))     (* stmt -> stmtordec *)
       ]))
     }
@@ -161,22 +161,22 @@ stmt:
     { 
       let while_body = match incr with 
         | None    ->  body
-        | Some v  ->  let incr_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
+        | Some v  ->  let incr_stmt = build_node $loc(incr) (Ast.Expr(v)) in  (* expr -> stmt *)
                       build_node $loc (Ast.Block([
-                        build_node $loc (Ast.Stmt(body));     (* stmt -> stmtordec *)
-                        build_node $loc (Ast.Stmt(incr_stmt)) (* stmt -> stmtordec *)
+                        build_node $loc(body) (Ast.Stmt(body));     (* stmt -> stmtordec *)
+                        build_node $loc(incr) (Ast.Stmt(incr_stmt)) (* stmt -> stmtordec *)
                       ]))
       in
       let condition = match cond with
-        | None    ->  build_node $loc (Ast.BLiteral(true))
+        | None    ->  build_node $loc(cond) (Ast.BLiteral(true))
         | Some v  ->  v
       in
       let while_stmt_node = build_node $loc (Ast.While(condition, while_body)) in  (* while -> stmt *)
       match init with
         | None    ->  while_stmt_node
-        | Some v  ->  let init_stmt = build_node $loc (Ast.Expr(v)) in  (* expr -> stmt *)
+        | Some v  ->  let init_stmt = build_node $loc(init) (Ast.Expr(v)) in  (* expr -> stmt *)
                       build_node $loc (Ast.Block([
-                        build_node $loc (Ast.Stmt(init_stmt));          (* stmt -> stmtordec *)
+                        build_node $loc(init) (Ast.Stmt(init_stmt));          (* stmt -> stmtordec *)
                         build_node $loc (Ast.Stmt(while_stmt_node))     (* stmt -> stmtordec *)
                       ]))
     }
@@ -200,11 +200,11 @@ lexpr:
     ID                            { build_node $loc (Ast.AccVar($1)) }
   | LPAREN lexpr RPAREN           { $2 }
   | MULT lexpr                    { 
-                                    let acc = build_node $loc (Ast.Access($2)) in
+                                    let acc = build_node $loc($2) (Ast.Access($2)) in
                                     build_node $loc (Ast.AccDeref(acc))
                                   }
   | MULT AMPERSAND lexpr          { 
-                                    let acc = build_node $loc (Ast.Addr($3)) in
+                                    let acc = build_node $loc($3) (Ast.Addr($3)) in
                                     build_node $loc (Ast.AccDeref(acc))
                                   }
   | lexpr LBRACKET expr RBRACKET  { build_node $loc (Ast.AccIndex($1, $3)) }
@@ -219,7 +219,7 @@ rexpr:
   | SUB e = expr %prec NEG  { Ast.UnaryOp(Ast.Neg, e) }
   | expr binop expr         { Ast.BinaryOp($2, $1, $3) }
   | lexpr shortop expr      {
-                              let leftExpr = build_node $loc (Ast.Access($1)) in
+                              let leftExpr = build_node $loc($1) (Ast.Access($1)) in
                               Ast.Assign($1, build_node $loc (Ast.BinaryOp($2, leftExpr, $3)))
                             }
   | INCREMENT lexpr         { Ast.UnaryOp(Ast.PreIncr, build_node $loc (Ast.Access($2))) }
