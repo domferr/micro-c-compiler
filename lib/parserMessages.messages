@@ -14,7 +14,7 @@ program: VOID WHILE
 ##
 ## Ends in an error in state: 1.
 ##
-## topdecl -> VOID . ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block [ VOID INT EOF CHAR BOOL ]
+## topdecls -> VOID . ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## VOID
@@ -26,7 +26,7 @@ program: VOID ID WHILE
 ##
 ## Ends in an error in state: 2.
 ##
-## topdecl -> VOID ID . LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block [ VOID INT EOF CHAR BOOL ]
+## topdecls -> VOID ID . LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## VOID ID
@@ -38,7 +38,7 @@ program: VOID ID LPAREN WHILE
 ##
 ## Ends in an error in state: 3.
 ##
-## topdecl -> VOID ID LPAREN . loption(separated_nonempty_list(COMMA,formal)) RPAREN block [ VOID INT EOF CHAR BOOL ]
+## topdecls -> VOID ID LPAREN . loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## VOID ID LPAREN
@@ -149,7 +149,7 @@ program: VOID ID LPAREN RPAREN WHILE
 ##
 ## Ends in an error in state: 21.
 ##
-## topdecl -> VOID ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN . block [ VOID INT EOF CHAR BOOL ]
+## topdecls -> VOID ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN . block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## VOID ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN
@@ -161,7 +161,7 @@ program: BOOL ID LPAREN RPAREN LBRACE VOID
 ##
 ## Ends in an error in state: 22.
 ##
-## block -> LBRACE . list(stmtordec) RBRACE [ WHILE VOID SUB RETURN RBRACE NULL NOT MULT LPAREN LBRACE INTEGER INT INCREMENT IF ID FOR EOF ELSE DO DECREMENT CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
+## block -> LBRACE . stmtordec RBRACE [ WHILE VOID SUB RETURN RBRACE NULL NOT MULT LPAREN LBRACE INTEGER INT INCREMENT IF ID FOR EOF ELSE DO DECREMENT CHARACTER CHAR BOOLEAN BOOL AMPERSAND ]
 ##
 ## The known suffix of the stack is as follows:
 ## LBRACE
@@ -1664,9 +1664,9 @@ program: BOOL ID LPAREN RPAREN LBRACE IF LPAREN ID RPAREN LBRACE RBRACE ELSE VOI
 
 program: BOOL ID LPAREN RPAREN LBRACE BOOL WHILE
 ##
-## Ends in an error in state: 141.
+## Ends in an error in state: 139.
 ##
-## vardecl -> typ . vardesc option(preceded(ASSIGN,expr)) [ SEMICOL ]
+## stmtordec -> typ . separated_nonempty_list(COMMA,vardecl) SEMICOL stmtordec [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ
@@ -1676,13 +1676,13 @@ program: BOOL ID LPAREN RPAREN LBRACE BOOL WHILE
 
 program: BOOL MULT ID RPAREN
 ##
-## Ends in an error in state: 142.
+## Ends in an error in state: 140.
 ##
-## vardecl -> typ vardesc . option(preceded(ASSIGN,expr)) [ SEMICOL ]
-## vardesc -> vardesc . LBRACKET option(INTEGER) RBRACKET [ SEMICOL LBRACKET ASSIGN ]
+## vardecl -> vardesc . option(preceded(ASSIGN,expr)) [ SEMICOL COMMA ]
+## vardesc -> vardesc . LBRACKET option(INTEGER) RBRACKET [ SEMICOL LBRACKET COMMA ASSIGN ]
 ##
 ## The known suffix of the stack is as follows:
-## typ vardesc
+## vardesc
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
@@ -1695,9 +1695,9 @@ program: BOOL MULT ID RPAREN
 
 program: BOOL ID ASSIGN WHILE
 ##
-## Ends in an error in state: 143.
+## Ends in an error in state: 141.
 ##
-## option(preceded(ASSIGN,expr)) -> ASSIGN . expr [ SEMICOL ]
+## option(preceded(ASSIGN,expr)) -> ASSIGN . expr [ SEMICOL COMMA ]
 ##
 ## The known suffix of the stack is as follows:
 ## ASSIGN
@@ -1707,22 +1707,22 @@ program: BOOL ID ASSIGN WHILE
 
 program: BOOL ID ASSIGN ID RPAREN
 ##
-## Ends in an error in state: 144.
+## Ends in an error in state: 142.
 ##
-## option(preceded(ASSIGN,expr)) -> ASSIGN expr . [ SEMICOL ]
-## rexpr -> expr . ADD expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . SUB expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . MULT expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . MOD expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . DIV expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . AND expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . OR expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . EQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . NEQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . LT expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . GT expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . LEQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
-## rexpr -> expr . GEQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV AND ADD ]
+## option(preceded(ASSIGN,expr)) -> ASSIGN expr . [ SEMICOL COMMA ]
+## rexpr -> expr . ADD expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . SUB expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . MULT expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . MOD expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . DIV expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . AND expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . OR expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . EQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . NEQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . LT expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . GT expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . LEQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
+## rexpr -> expr . GEQ expr [ SUB SEMICOL OR NEQ MULT MOD LT LEQ GT GEQ EQ DIV COMMA AND ADD ]
 ##
 ## The known suffix of the stack is as follows:
 ## ASSIGN expr
@@ -1737,36 +1737,60 @@ program: BOOL ID ASSIGN ID RPAREN
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL ID LPAREN RPAREN LBRACE LBRACE RBRACE VOID
+program: BOOL ID COMMA WHILE
 ##
-## Ends in an error in state: 146.
+## Ends in an error in state: 145.
 ##
-## list(stmtordec) -> stmtordec . list(stmtordec) [ RBRACE ]
+## separated_nonempty_list(COMMA,vardecl) -> vardecl COMMA . separated_nonempty_list(COMMA,vardecl) [ SEMICOL ]
 ##
 ## The known suffix of the stack is as follows:
-## stmtordec
+## vardecl COMMA
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL ID LPAREN BOOL ID COMMA WHILE
+program: BOOL ID LPAREN RPAREN LBRACE BOOL ID SEMICOL VOID
 ##
-## Ends in an error in state: 153.
+## Ends in an error in state: 148.
 ##
-## separated_nonempty_list(COMMA,formal) -> formal COMMA . separated_nonempty_list(COMMA,formal) [ RPAREN ]
+## stmtordec -> typ separated_nonempty_list(COMMA,vardecl) SEMICOL . stmtordec [ RBRACE ]
 ##
 ## The known suffix of the stack is as follows:
-## formal COMMA
+## typ separated_nonempty_list(COMMA,vardecl) SEMICOL
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL ID LPAREN RPAREN LBRACE LBRACE RBRACE VOID
+##
+## Ends in an error in state: 150.
+##
+## stmtordec -> stmt . stmtordec [ RBRACE ]
+##
+## The known suffix of the stack is as follows:
+## stmt
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: VOID ID LPAREN RPAREN LBRACE RBRACE WHILE
+##
+## Ends in an error in state: 154.
+##
+## topdecls -> VOID ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block . topdecls [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## VOID ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL WHILE
 ##
-## Ends in an error in state: 157.
+## Ends in an error in state: 155.
 ##
-## topdecl -> typ . ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block [ VOID INT EOF CHAR BOOL ]
-## vardecl -> typ . vardesc option(preceded(ASSIGN,expr)) [ SEMICOL ]
+## topdecls -> typ . separated_nonempty_list(COMMA,vardecl) SEMICOL topdecls [ EOF ]
+## topdecls -> typ . ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ
@@ -1776,10 +1800,10 @@ program: BOOL WHILE
 
 program: BOOL ID WHILE
 ##
-## Ends in an error in state: 158.
+## Ends in an error in state: 156.
 ##
-## topdecl -> typ ID . LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block [ VOID INT EOF CHAR BOOL ]
-## vardesc -> ID . [ SEMICOL LBRACKET ASSIGN ]
+## topdecls -> typ ID . LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
+## vardesc -> ID . [ SEMICOL LBRACKET COMMA ASSIGN ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ ID
@@ -1789,9 +1813,9 @@ program: BOOL ID WHILE
 
 program: BOOL ID LPAREN WHILE
 ##
-## Ends in an error in state: 159.
+## Ends in an error in state: 157.
 ##
-## topdecl -> typ ID LPAREN . loption(separated_nonempty_list(COMMA,formal)) RPAREN block [ VOID INT EOF CHAR BOOL ]
+## topdecls -> typ ID LPAREN . loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ ID LPAREN
@@ -1801,9 +1825,9 @@ program: BOOL ID LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN WHILE
 ##
-## Ends in an error in state: 161.
+## Ends in an error in state: 159.
 ##
-## topdecl -> typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN . block [ VOID INT EOF CHAR BOOL ]
+## topdecls -> typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN . block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN
@@ -1811,14 +1835,38 @@ program: BOOL ID LPAREN RPAREN WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL ID SEMICOL WHILE
+program: BOOL ID LPAREN RPAREN LBRACE RBRACE WHILE
+##
+## Ends in an error in state: 160.
+##
+## topdecls -> typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block . topdecls [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL ID LPAREN BOOL ID COMMA WHILE
 ##
 ## Ends in an error in state: 163.
 ##
-## list(topdecl) -> topdecl . list(topdecl) [ EOF ]
+## separated_nonempty_list(COMMA,formal) -> formal COMMA . separated_nonempty_list(COMMA,formal) [ RPAREN ]
 ##
 ## The known suffix of the stack is as follows:
-## topdecl
+## formal COMMA
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL ID SEMICOL WHILE
+##
+## Ends in an error in state: 166.
+##
+## topdecls -> typ separated_nonempty_list(COMMA,vardecl) SEMICOL . topdecls [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## typ separated_nonempty_list(COMMA,vardecl) SEMICOL
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>

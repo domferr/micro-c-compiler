@@ -21,7 +21,6 @@
 
   let build_node l n =
     { loc = Location.to_code_position(l); node = n }
-
 %}
 
 
@@ -88,29 +87,44 @@
 
 /* -------------------------- Grammar specification --------------------------- */
 program:
-    topdecl* EOF    { Ast.Prog($1) }
+    topdecls EOF    { Ast.Prog($1) }
 ;
 
-topdecl:
-    v = vardecl SEMICOL 
+topdecls:
+    { [] }
+  | typ ds = separated_nonempty_list(COMMA, vardecl) SEMICOL lis = topdecls 
     { 
-      build_node $loc (Ast.Vardec(v)) 
+      let decls = List.rev_map (fun buildvardecl ->
+        let locandvar = buildvardecl $1 in
+          build_node (fst locandvar) (Ast.Vardec(snd locandvar))
+      ) ds in
+      List.rev_append decls lis
     }
-  | return_typ ID LPAREN form = separated_list(COMMA, formal) RPAREN b = block 
+  | return_typ ID LPAREN form = separated_list(COMMA, formal) RPAREN b = block lis = topdecls
     { 
       let block_node = build_node $loc(b) b in 
-      build_node $loc (Ast.Fundecl{ 
+      (build_node $loc (Ast.Fundecl{ 
         typ = $1; fname = $2; formals = form; body = block_node 
-      })
+      }))::lis
     }
 ;
 
+/* Variable declaration with optional initialization */
+vardecl:
+    vardesc init = option(preceded(ASSIGN, expr)) 
+      { 
+        fun t -> ($loc, { typ = (fst $1) t; vname = snd $1; init})
+      }
+;
+
+/* Types are all of them but not void */
 typ:
     INT   { Ast.TypI }
   | CHAR  { Ast.TypC }
   | BOOL  { Ast.TypB }
 ;
 
+/* Functions can return all the types plus void type */
 %inline return_typ:
     VOID  { Ast.TypV }
   | typ   { $1 }
@@ -118,10 +132,6 @@ typ:
 
 formal:
     typ vardesc           { ((fst $2) $1, snd $2) }
-;
-
-vardecl:
-    typ vardesc init = option(preceded(ASSIGN, expr)) { { typ = (fst $2) $1; vname = snd $2; init; } }
 ;
 
 vardesc:
@@ -133,12 +143,23 @@ vardesc:
 ;
 
 block:  // (stmt | vardecl SEMICOL)*
-    LBRACE list(stmtordec) RBRACE { Ast.Block($2) }
+    LBRACE stmtordec RBRACE { Ast.Block($2) }
 ;
 
 stmtordec:
-    v = vardecl SEMICOL   { build_node $loc (Ast.Dec(v)) }
-  | stmt                  { build_node $loc (Ast.Stmt($1)) }
+    { [] }
+  | stmt lis = stmtordec 
+    { 
+      (build_node $loc (Ast.Stmt($1)))::lis 
+    }
+  | typ ds = separated_nonempty_list(COMMA, vardecl) SEMICOL lis = stmtordec 
+    {
+      let decls = List.rev_map (fun buildvardecl ->
+        let locandvar = buildvardecl $1 in
+          build_node (fst locandvar) (Ast.Dec(snd locandvar))
+      ) ds in
+      List.rev_append decls lis
+    }
 ;
 
 stmt:
