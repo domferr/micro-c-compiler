@@ -46,6 +46,19 @@ let type_check_assign node acc_typ exp_typ =
       Sem_error.raise_invalid_assignment_type node a_typ e_typ
   | _, _ -> acc_typ
 
+let type_check_binary_op expr binaryop left_typ right_typ =
+  match binaryop with 
+  (* math op between ints returns int *)
+    Ast.Add | Ast.Sub | Ast.Mult | Ast.Div 
+  | Ast.Mod -> if left_typ = right_typ && left_typ = Ast.TypI then Ast.TypI 
+               else Sem_error.raise_invalid_binary_op expr
+  (* logical op between bools returns bool *)
+  | Ast.And | Ast.Or -> if left_typ = right_typ && left_typ = Ast.TypI then Ast.TypB 
+                        else Sem_error.raise_invalid_binary_op expr
+  (* comparison op between same type returns bool *)
+  | _ -> if left_typ = right_typ then Ast.TypB
+         else Sem_error.raise_invalid_binary_comparison expr left_typ right_typ
+
 (* A pass to check if the main function is defined properly *)
 let check_main_function_pass topdeclList =
   let checker ann_node =
@@ -101,19 +114,7 @@ let rec type_check_expr expr symbtbl =
   | Ast.BinaryOp (op, left, right) -> 
       let left_typ = type_check_expr left symbtbl in
       let right_typ = type_check_expr right symbtbl in
-      let op_type = match op with 
-          Ast.Add 
-        | Ast.Sub 
-        | Ast.Mult
-        | Ast.Div
-        | Ast.Mod -> Ast.TypI, Ast.TypI (* op between ints returns int *)
-        | Ast.And
-        | Ast.Or -> Ast.TypB, Ast.TypB (* op between bools returns bool *)
-        | _ -> Ast.TypI, Ast.TypB (* ints comparison returns bool *)
-      in if (left_typ = right_typ && left_typ = (fst op_type)) then 
-          (snd op_type) 
-        else 
-          Sem_error.raise_invalid_binary_op expr
+      type_check_binary_op expr op left_typ right_typ
   | Ast.Call (ide, exprList) -> 
       match Symbol_table.lookup ide symbtbl with
         Some Function(_, _, ret_typ, formalsList) ->
@@ -145,10 +146,9 @@ let type_check_var_decl typ initexpr symbtbl =
 (* Type checker function for stmt. Returns the statement type, if any *)
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
-    (match type_check_expr guard symbtbl with
-      Ast.TypB -> ()
-    | _ -> Sem_error.raise_invalid_guard_type guard
-  ) in
+    if type_check_expr guard symbtbl = Ast.TypB then ()
+    else Sem_error.raise_invalid_guard_type guard
+  in
   match stmt.node with 
     Ast.If (guard, thbr, elbr) ->
       (* Type check guard *)

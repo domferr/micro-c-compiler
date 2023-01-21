@@ -57,6 +57,10 @@ let raise_invalid_binary_op node = raise(Semantic_error(node.loc,
   "Invalid binary operation"
 ))
 
+let raise_invalid_binary_comparison node left_typ right_typ = raise(Semantic_error(node.loc, 
+  Printf.sprintf "Invalid binary operation. Cannot compare %s with %s" (descr_typ left_typ) (descr_typ right_typ)
+))
+
 let raise_invalid_function_arg_type node req_typ given_typ = raise(Semantic_error(node.loc, 
   Printf.sprintf "Invalid argument, expected %s but found %s" (descr_typ req_typ) (descr_typ given_typ))
 )
