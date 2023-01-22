@@ -429,7 +429,7 @@ void main() {
 (
 "Main function cannot return bool",
 "bool main() { /* main cannot return bool */
-    
+    return false;
 }"
 );
 (
@@ -608,14 +608,15 @@ int foo() {}"
 let run_test sourcecode =
   let lexbuf = Lexing.from_string ~with_positions:true sourcecode in 
   try
-    lexbuf |>
-    Parsing.parse Scanner.next_token |>
+    lexbuf |> Parsing.parse "" Scanner.next_token |>
     Semantic_analysis.type_check |>
     ignore; false
   with 
-  | Scanner.Lexing_error _ | Parsing.Syntax_error _ -> 
-    false
   | Sem_error.Semantic_error _ -> true
+  | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) -> 
+    Errors.report_singleline "Error" sourcecode pos msg;
+    false
+  
 
 let run_tests =
   (* Run all the tests *)

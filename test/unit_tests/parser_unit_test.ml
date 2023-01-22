@@ -27,7 +27,7 @@ let run_test sourcecode =
   let lexbuf = Lexing.from_string ~with_positions:true sourcecode in 
   try
     lexbuf |>
-    Parsing.parse Scanner.next_token |>
+    Parsing.parse "" Scanner.next_token |>
     ignore; true
   with 
   | Scanner.Lexing_error _ -> false

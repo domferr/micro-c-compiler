@@ -4,8 +4,10 @@ let report_line header line (lexeme_pos: Location.lexeme_pos) msg =
 		(lexeme_pos.Location.end_column - lexeme_pos.Location.start_column + 1)
 		'^'
 	in
-	Printf.eprintf "\027[1;31m%s\027[0m, line %d: \027[1m%s\027[0m\n%s\n%s\027[1;31m%s\027[0m\n"
-		header lexeme_pos.Location.line msg line prefix arrows
+	Printf.eprintf "\027[1;31m%s\027[0m, %s, line %d: \027[1m%s\027[0m\n%s\n%s\027[1;31m%s\027[0m\n"
+		header lexeme_pos.Location.filename lexeme_pos.Location.line msg 
+    line 
+    prefix arrows
 
 let report_singleline header source lexeme_pos msg =
   let lines = String.split_on_char '\n' source in
@@ -20,9 +22,13 @@ let report_multiline header source code_pos msg =
            && line <= code_pos.Location.end_line - 1)
   in
   let length = List.length lines in
-  if length = 1 then
+  if length = 0 || code_pos.Location.filename = "" then
+    Printf.eprintf "\027[1;31m%s\027[0m: \027[1m%s\027[0m\n"
+    header msg
+  else if length = 1 then
     let line = List.hd lines in
 		let lexeme_pos = Location.{ 
+      filename = code_pos.Location.filename;
 			line = code_pos.Location.start_line; 
 			start_column = code_pos.Location.start_column; 
 			end_column = code_pos.Location.end_column 
@@ -30,8 +36,9 @@ let report_multiline header source code_pos msg =
 		report_line header line lexeme_pos msg
   else
     let text = lines |> List.filteri (fun i _ -> i < 5) |> String.concat "\n" in
-    Printf.eprintf "\027[1;31m%s\027[0m, lines %d-%d: \027[1m%s\027[0m\n%s\n"
+    Printf.eprintf "\027[1;31m%s\027[0m, %s, lines %d-%d: \027[1m%s\027[0m\n%s\n"
       header
+      code_pos.Location.filename
 			code_pos.Location.start_line
       (code_pos.Location.start_line + 5)
 			msg

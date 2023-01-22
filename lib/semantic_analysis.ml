@@ -58,19 +58,6 @@ let type_check_binary_op expr binaryop left_typ right_typ =
   | _ -> if left_typ = right_typ then Ast.TypB
          else Sem_error.raise_invalid_binary_comparison expr left_typ right_typ
 
-(* A pass to check if the main function is defined properly *)
-let check_main_function_pass topdeclList =
-  let checker ann_node =
-    match ann_node.node with
-      Ast.Vardec { vname = "main"; _ } -> Sem_error.raise_variable_main ann_node
-    | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; _ } -> true
-    | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; _ } -> true
-    | Ast.Fundecl { fname = "main"; _ } -> Sem_error.raise_invalid_def_main ann_node
-    | _ -> false
-  in
-  let has_main = List.exists checker topdeclList in
-  if has_main then () else Sem_error.raise_missing_main_definition()
-
 (* Type checker function for expr. Returns the expression type *)
 let rec type_check_expr expr symbtbl =
   let rec type_check_access acc = match acc.node with
@@ -133,15 +120,6 @@ let rec type_check_expr expr symbtbl =
             Sem_error.raise_invalid_arguments_number expr ide declArgsLen callArgsLen)
       | _ -> Sem_error.raise_missing_fun_declaration expr ide
 
-(* Check if the variable declaration has an assignment aswell. If that's the
-   case it checks if the assignment is valid. Raises Semantic_error if the 
-    assignment's type check operation fails *)
-let type_check_var_decl typ initexpr symbtbl = 
-  match initexpr with
-      Some ex ->  let init_type = type_check_expr ex symbtbl in
-                  type_check_assign ex typ init_type
-    | None -> typ
-
 (* Type checker function for stmt. Returns the statement type, if any *)
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
@@ -180,7 +158,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
           Ast.Stmt stmt -> type_check_stmt ret_typ stmt symbtbl
         | Ast.Dec { typ = Ast.TypA(_, None);  _ }  -> Sem_error.raise_missing_array_size ann_node 
         | Ast.Dec { typ; vname; init } ->
-          type_check_var_decl typ init symbtbl |> ignore;
+          type_check_var_decl typ init symbtbl;
           st_add_symbol symbtbl (Variable(ann_node.loc, vname, typ));          
           None
       ) stmtordecList in 
@@ -195,31 +173,63 @@ let rec type_check_stmt ret_typ stmt symbtbl =
         expr_typ when expr_typ = ret_typ -> Some ret_typ
       | _ -> Sem_error.raise_invalid_return_type stmt
 
-(* Type checker for function declaration. For each function declared, it will type check 
-   its formals and body *)
-let type_check_function_decl node fun_decl symbtbl =
-  st_add_symbol symbtbl (Function(node.loc, fun_decl.fname, fun_decl.typ, fun_decl.formals));
+(* Check if the variable declaration has an assignment aswell. If that's the
+case it checks if the assignment is valid. Raises Semantic_error if the 
+assignment's type check operation fails *)
+and type_check_var_decl typ initexpr symbtbl = 
+  match initexpr with
+      Some ex ->  let init_type = type_check_expr ex symbtbl in
+                  type_check_assign ex typ init_type |> ignore
+    | None -> ()
+
+(* Type checker for function declaration. For each function declared, it will 
+type check its formals and body *)
+let type_check_fun_decl node fun_decl symbtbl =
   (* Add each formal to the symbol table *)
   List.iter (fun arg -> st_add_symbol symbtbl (Variable(node.loc, snd arg, fst arg))) fun_decl.formals;
-  (* Check function body *)
+  (* Type check function body *)
   match type_check_stmt fun_decl.typ fun_decl.body symbtbl with
       None when fun_decl.typ != Ast.TypV -> Sem_error.raise_missing_return node
     | _ -> ()
 
-(* Entry point for semantic analysis *)
-let type_check (Ast.Prog topdeclList) =
+(* Add each top declaration into the symbol table *)
+let st_add_topdecls symbtbl = List.iter (fun node ->
+  match node with
+    { loc; node = Ast.Vardec { typ; vname; _ } } -> 
+      st_add_symbol symbtbl (Variable(loc, vname, typ))
+  | { loc; node = Ast.Fundecl { typ; fname; formals; _ } } ->
+      st_add_symbol symbtbl (Function(loc, fname, typ, formals))
+  )
+
+(* A pass to check if the main function is defined properly *)
+let check_main_function_pass topdeclList =
+  let checker ann_node =
+    match ann_node.node with
+      Ast.Vardec { vname = "main"; _ } -> Sem_error.raise_variable_main ann_node
+    | Ast.Fundecl { typ = Ast.TypI; fname = "main"; formals = []; _ } -> true
+    | Ast.Fundecl { typ = Ast.TypV; fname = "main"; formals = []; _ } -> true
+    | Ast.Fundecl { fname = "main"; _ } -> Sem_error.raise_invalid_def_main ann_node
+    | _ -> false
+  in
+  let has_main = List.exists checker topdeclList in
+  if has_main then () 
+  else Sem_error.raise_missing_main_definition()
+
+let type_check (Ast.Prog(topdecls)) =
   let symbtbl = Symbol_table.empty_table() in
-  (* Check main function and its return type *)
-  check_main_function_pass topdeclList;
   (* Add runtime support functions before anything else *)
   List.iter (fun fn -> Symbol_table.add_entry (fst fn) (snd fn) symbtbl) rt_support_functions;
-  (* Analyze each top declaration *)
-  List.iter (fun ann_node ->
-    match ann_node.node with
-        Ast.Vardec { typ; vname; init } -> 
-          type_check_var_decl typ init symbtbl |> ignore;
-          st_add_symbol symbtbl (Variable(ann_node.loc, vname, typ))
-      | Ast.Fundecl fun_decl  -> type_check_function_decl ann_node fun_decl symbtbl
-  ) topdeclList;
-  (* Finally return AST *)
-  Ast.Prog topdeclList
+  (* Add each top declaration *)
+  st_add_topdecls symbtbl topdecls;
+  (* Check if the main function declared properly *)
+  check_main_function_pass topdecls;
+  (* Type check each top declaration *)
+  List.iter (fun node ->
+    match node.node with
+      Ast.Vardec { typ; init; _ } -> 
+        type_check_var_decl typ init symbtbl |> ignore
+    | Ast.Fundecl fun_decl -> 
+        type_check_fun_decl node fun_decl symbtbl
+  ) topdecls;
+  (* Return semantically correct program *)
+  Ast.Prog(topdecls)

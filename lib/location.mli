@@ -1,7 +1,8 @@
-type lexeme_pos = { line : int; start_column : int; end_column : int }
+type lexeme_pos = { filename: string; line : int; start_column : int; end_column : int }
 [@@deriving show, ord, eq]
 
 type code_pos = {
+  filename: string;
   start_line : int;
   start_column : int;
   end_line : int;

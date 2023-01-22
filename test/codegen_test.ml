@@ -43,8 +43,7 @@ let process_source filename =
   let lexbuf = Lexing.from_string ~with_positions:true source in 
   try
     let llmodule = 
-      lexbuf |>
-      Parsing.parse Scanner.next_token |>
+      lexbuf |> Parsing.parse filename Scanner.next_token |>
       Semantic_analysis.type_check |>
       Codegen.to_llvm_module
     in 

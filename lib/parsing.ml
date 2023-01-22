@@ -3,11 +3,12 @@ exception Syntax_error of Location.lexeme_pos * string
 let error_message state =
   try
     let msg = ParserMessages.message state in
-    Printf.sprintf "%s (in state %d).\n" msg state
+    Printf.sprintf "(state %d) %s" state msg
   with Not_found ->
-    Printf.sprintf "Unknown syntax error (in state %d).\n" state
+    Printf.sprintf "Unknown syntax error (in state %d)" state
 
-let parse scanner lexbuf =
+let parse filename scanner lexbuf =
+  Lexing.set_filename lexbuf filename;
   try
     Parser.program scanner lexbuf
   with

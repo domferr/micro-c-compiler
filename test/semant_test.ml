@@ -40,8 +40,7 @@ let process_source filename =
   let source = load_file filename in 
   let lexbuf = Lexing.from_string ~with_positions:true source in 
   try
-    lexbuf |>
-    Parsing.parse Scanner.next_token |>
+    lexbuf |> Parsing.parse filename Scanner.next_token |>
     Semantic_analysis.type_check |>
     Ast.show_program |>
     Printf.printf "Semantic analysis succeded!\n\n%s\n"  

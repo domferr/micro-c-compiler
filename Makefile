@@ -92,6 +92,6 @@ unit-tests:  ## Run all the unit tests
 
 .PHONY: clang
 clang:
-	@cp $(ARGS) $(ARGS:.mc=.c)
-	clang $(ARGS:.mc=.c) -fsyntax-only || true
-	@rm $(ARGS:.mc=.c)
+	@for f in $(ARGS:.mc=); do cp -- "$$f".mc "$$f".c; done
+	(clang $(ARGS:.mc=.c) -o a.out && rm a.out) || true
+	@rm $(ARGS:.mc=.c) || true

@@ -25,7 +25,7 @@ let process_source filename =
   let lexbuf = Lexing.from_string ~with_positions:true source in
   try
     lexbuf
-    |> Parsing.parse Scanner.next_token
+    |> Parsing.parse filename Scanner.next_token
     |> Ast.show_program
     |> Printf.printf "Parsing succeded!\n\n%s\n"
   with Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
