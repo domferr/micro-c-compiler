@@ -9,14 +9,14 @@ type symbol =
 
 (* Function to add the symbol into the symbol table *)
 let st_add_symbol tbl new_symbol =
-  let loc_and_ide = match new_symbol with
-      Variable (loc, ide, _)       -> (loc, ide)
-    | Function (loc, fname, _, _)  -> (loc, fname)
+  let (loc, ide) = match new_symbol with
+      Variable (l, i, _)       -> (l, i)
+    | Function (l, fname, _, _)  -> (l, fname)
   in
   try
-    Symbol_table.add_entry (snd loc_and_ide) new_symbol tbl
+    Symbol_table.add_entry ide new_symbol tbl
   with
-    | Symbol_table.DuplicateEntry(entry) -> Sem_error.raise_duplicate_declaration (fst loc_and_ide) entry
+    | Symbol_table.DuplicateEntry(entry) -> Sem_error.raise_duplicate_declaration loc entry
 
 (* List of run-time support functions *)
 let rt_support_functions = [
@@ -173,7 +173,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
       Symbol_table.end_block symbtbl;
       while_ret
   | Ast.Expr e -> Some (type_check_expr e symbtbl)
-  | Ast.Block stmtordecList -> 
+  | Ast.Block stmtordecList ->
       Symbol_table.begin_block symbtbl;
       let ret_list = List.filter_map (fun ann_node ->
         match ann_node.node with
@@ -184,6 +184,7 @@ let rec type_check_stmt ret_typ stmt symbtbl =
           st_add_symbol symbtbl (Variable(ann_node.loc, vname, typ));          
           None
       ) stmtordecList in 
+      Symbol_table.end_block symbtbl;
       (match ret_list with
         t::_  -> Some t
       | _     -> None)

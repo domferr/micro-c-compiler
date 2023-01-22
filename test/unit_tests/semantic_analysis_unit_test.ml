@@ -582,6 +582,26 @@ int main() {
   bool b;
   b = var; /* missing previous declaration of 'var' */
 }"
+);
+(
+"Multiple function declarations that have the same return type",
+"void foo() {}
+
+void main() {
+
+}
+
+void foo() {}"
+);
+(
+"Multiple function declarations that have different return type",
+"void foo() {}
+
+void main() {
+
+}
+
+int foo() {}"
 )
 ]
 
