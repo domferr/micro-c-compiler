@@ -1,39 +1,37 @@
 open Ast
 
-(* Definition of symbol, which is added into the symbol table *)
+(** Definition of symbol, which is added into the symbol table *)
 type symbol = 
   (* variable pos, name, variable type *)
-    Variable of Location.code_pos * Ast.identifier * Ast.typ 
+    Variable of Location.code_pos * Ast.typ 
   (* function pos, name, return type, list of formals *)
-  | Function of Location.code_pos * string * Ast.typ * (Ast.typ * Ast.identifier) list
+  | Function of Location.code_pos * Ast.typ * (Ast.typ * Ast.identifier) list
 
-(* Function to add the symbol into the symbol table *)
-let st_add_symbol tbl new_symbol =
-  let (loc, ide) = match new_symbol with
-      Variable (l, i, _)       -> (l, i)
-    | Function (l, fname, _, _)  -> (l, fname)
+(** Function to add the symbol into the symbol table. 
+   It wraps the add_entry function to handle the raise of duplicate
+   declaration exception *)
+let st_add_symbol tbl ide new_symbol =
+  let loc = match new_symbol with
+    Variable(l, _) | Function(l, _, _) -> l
   in
-  try
-    Symbol_table.add_entry ide new_symbol tbl
-  with
-    | Symbol_table.DuplicateEntry(entry) -> Sem_error.raise_duplicate_declaration loc entry
+  try Symbol_table.add_entry ide new_symbol tbl with
+    | Symbol_table.DuplicateEntry(entry) -> 
+      Sem_error.raise_duplicate_declaration loc entry
 
-(* List of run-time support functions *)
+(** List of run-time support functions *)
 let rt_support_functions = [
   "print", Function(
-    Location.dummy_code_pos, 
-    "print", (* function name is "print" *)
+    Location.dummy_code_pos,
     Ast.TypV, (* returns void *)
     [(Ast.TypI, "num")] (* an integer as arg *)
   );
   "getint", Function(
-    Location.dummy_code_pos, 
-    "getint", (* function name is "getint" *)
+    Location.dummy_code_pos,
     Ast.TypI, (* returns int *)
     [] (* No args *)
 )]
 
-(* Checks whether variable type is compatible with assignment type and 
+(** Checks whether variable type is compatible with assignment type and 
    returns variable type, raises a Semantic_error exception otherwise *)
 let type_check_assign node acc_typ exp_typ = 
   match acc_typ, exp_typ with
@@ -58,12 +56,12 @@ let type_check_binary_op expr binaryop left_typ right_typ =
   | _ -> if left_typ = right_typ then Ast.TypB
          else Sem_error.raise_invalid_binary_comparison expr left_typ right_typ
 
-(* Type checker function for expr. Returns the expression type *)
+(** Type checker function for expr. Returns the expression type *)
 let rec type_check_expr expr symbtbl =
   let rec type_check_access acc = match acc.node with
     Ast.AccVar ide -> 
       (match Symbol_table.lookup ide symbtbl with
-          Some Variable(_, _, t) -> t
+          Some Variable(_, t) -> t
         | _ -> Sem_error.raise_variable_not_declared acc ide)
   | Ast.AccDeref e -> 
     (match type_check_expr e symbtbl with
@@ -103,7 +101,7 @@ let rec type_check_expr expr symbtbl =
       type_check_binary_op expr op left_typ right_typ
   | Ast.Call (ide, exprList) -> 
       match Symbol_table.lookup ide symbtbl with
-        Some Function(_, _, ret_typ, formalsList) ->
+        Some Function(_, ret_typ, formalsList) ->
           (try
             List.iter2 (fun ex formal ->
               let formal_typ = fst formal in
@@ -120,7 +118,7 @@ let rec type_check_expr expr symbtbl =
             Sem_error.raise_invalid_arguments_number expr ide declArgsLen callArgsLen)
       | _ -> Sem_error.raise_missing_fun_declaration expr ide
 
-(* Type checker function for stmt. Returns the statement type, if any *)
+(** Type checker function for stmt. Returns the statement type, if any *)
 let rec type_check_stmt ret_typ stmt symbtbl =
   let type_check_guard guard = 
     if type_check_expr guard symbtbl = Ast.TypB then ()
@@ -156,10 +154,11 @@ let rec type_check_stmt ret_typ stmt symbtbl =
       let ret_list = List.filter_map (fun ann_node ->
         match ann_node.node with
           Ast.Stmt stmt -> type_check_stmt ret_typ stmt symbtbl
-        | Ast.Dec { typ = Ast.TypA(_, None);  _ }  -> Sem_error.raise_missing_array_size ann_node 
+        | Ast.Dec { typ = Ast.TypA(_, None);  _ } ->
+          Sem_error.raise_missing_array_size ann_node 
         | Ast.Dec { typ; vname; init } ->
           type_check_var_decl typ init symbtbl;
-          st_add_symbol symbtbl (Variable(ann_node.loc, vname, typ));          
+          st_add_symbol symbtbl vname (Variable(ann_node.loc, typ));          
           None
       ) stmtordecList in 
       Symbol_table.end_block symbtbl;
@@ -173,35 +172,38 @@ let rec type_check_stmt ret_typ stmt symbtbl =
         expr_typ when expr_typ = ret_typ -> Some ret_typ
       | _ -> Sem_error.raise_invalid_return_type stmt
 
-(* Check if the variable declaration has an assignment aswell. If that's the
-case it checks if the assignment is valid. Raises Semantic_error if the 
-assignment's type check operation fails *)
+(** Check if the variable declaration has an assignment aswell. If that's the
+    case it checks if the assignment is valid. Raises Semantic_error if the 
+    assignment's type check operation fails *)
 and type_check_var_decl typ initexpr symbtbl = 
   match initexpr with
       Some ex ->  let init_type = type_check_expr ex symbtbl in
                   type_check_assign ex typ init_type |> ignore
     | None -> ()
 
-(* Type checker for function declaration. For each function declared, it will 
-type check its formals and body *)
+(** Type checker for function declaration. For each function declared, it will 
+    type check its formals and body *)
 let type_check_fun_decl node fun_decl symbtbl =
   (* Add each formal to the symbol table *)
-  List.iter (fun arg -> st_add_symbol symbtbl (Variable(node.loc, snd arg, fst arg))) fun_decl.formals;
+  List.iter (fun arg -> 
+    st_add_symbol symbtbl (snd arg) (Variable(node.loc, fst arg))
+  ) fun_decl.formals;
   (* Type check function body *)
   match type_check_stmt fun_decl.typ fun_decl.body symbtbl with
-      None when fun_decl.typ != Ast.TypV -> Sem_error.raise_missing_return node
+      None when fun_decl.typ != Ast.TypV -> 
+        Sem_error.raise_missing_return node
     | _ -> ()
 
-(* Add each top declaration into the symbol table *)
+(** Add each top declaration into the symbol table *)
 let st_add_topdecls symbtbl = List.iter (fun node ->
   match node with
     { loc; node = Ast.Vardec { typ; vname; _ } } -> 
-      st_add_symbol symbtbl (Variable(loc, vname, typ))
+      st_add_symbol symbtbl vname (Variable(loc, typ))
   | { loc; node = Ast.Fundecl { typ; fname; formals; _ } } ->
-      st_add_symbol symbtbl (Function(loc, fname, typ, formals))
+      st_add_symbol symbtbl fname (Function(loc, typ, formals))
   )
 
-(* A pass to check if the main function is defined properly *)
+(** A pass to check if the main function is defined properly *)
 let check_main_function_pass topdeclList =
   let checker ann_node =
     match ann_node.node with
@@ -233,3 +235,94 @@ let type_check (Ast.Prog(topdecls)) =
   ) topdecls;
   (* Return semantically correct program *)
   Ast.Prog(topdecls)
+
+type used_symbol = {
+  mutable used: bool;
+  symbol: symbol;
+}
+
+let add_dead_decl queue decltbl = 
+  let declaredlis = Symbol_table.get_current_block decltbl in
+  let add_to_queue msg loc = Queue.add (Warning.create msg loc) queue in
+  List.iter (fun (ide, decl) -> 
+    if decl.used then () 
+    else match decl.symbol with
+      Variable (loc, _)    -> add_to_queue (Printf.sprintf "Variable '%s' declared but never used" ide) loc
+    | Function (loc, _, _) -> add_to_queue (Printf.sprintf "Function '%s' declared but never used" ide) loc
+  ) declaredlis
+
+let set_used ide decltbl = match Symbol_table.lookup ide decltbl with
+    Some s -> s.used <- true
+  | None -> () (* None because runtime functions are not inside the symbol table *)
+
+let rec check_deadcode queue node decltbl =
+  let rec check_expr expr =
+    let rec check_access acc  = match acc.node with
+      Ast.AccVar ide -> set_used ide decltbl
+    | Ast.AccDeref e -> check_expr e
+    | Ast.AccIndex (accArr, e) -> 
+      check_access accArr; 
+      check_expr e
+    in
+      match expr.node with
+        Ast.Call(ide, _) -> set_used ide decltbl
+      | Ast.Access acc -> check_access acc
+      | Ast.Assign(acc, e) -> check_access acc; check_expr e
+      | Ast.Addr acc -> check_access acc
+      | Ast.UnaryOp(_, e) -> check_expr e
+      | Ast.BinaryOp(_, e1, e2) -> check_expr e1; check_expr e2
+      | _ -> ()
+  in
+  let rec check_block = function
+      [] -> false
+    | [{ node = Ast.Stmt(stmt); _ }] -> 
+        check_deadcode queue stmt decltbl
+    | { node = Ast.Stmt(stmt); _ }::next::tl ->
+        if check_deadcode queue stmt decltbl then (
+          Queue.add (Warning.create "Unreacheable line" next.loc) queue;
+          true
+        ) else check_block (next::tl)
+    | { node = Ast.Dec { vname; typ; init }; loc }::tl ->
+        Symbol_table.add_entry vname ({ used = false; symbol = (Variable(loc, typ)); }) decltbl;
+        (match init with Some e -> check_expr e | None -> ());
+        check_block tl
+  in
+  match node.node with
+    Ast.Block stmtordeclist ->
+      Symbol_table.begin_block decltbl;
+      let block_res = check_block stmtordeclist in
+      add_dead_decl queue decltbl;
+      Symbol_table.end_block decltbl;
+      block_res
+  | Ast.If(_, thbr, elbr) ->
+      check_deadcode queue thbr decltbl && check_deadcode queue elbr decltbl
+  | Ast.While(_, body) ->
+      check_deadcode queue body decltbl
+  | Ast.Return(_) -> true
+  | Ast.Expr(expr) -> 
+      check_expr expr; 
+      false
+
+let find_deadcode (Ast.Prog(topdecls)) =
+  let queue = Queue.create() in
+  let decltbl = Symbol_table.empty_table() in
+  (* Add each top declaration *)
+  List.iter (fun topdecl ->
+    let (ide, symbol) = match topdecl with
+      { loc; node = Ast.Vardec { typ; vname; _ } } -> 
+        (vname, Variable(loc, typ))
+    | { loc; node = Ast.Fundecl { typ; fname; formals; _ } } ->
+        (fname, Function(loc, typ, formals))
+    in
+    Symbol_table.add_entry ide ({ used = false; symbol; }) decltbl
+  ) topdecls;
+  set_used "main" decltbl;
+  List.iter (fun td ->
+    match td.node with
+      Ast.Fundecl fun_decl ->
+        check_deadcode queue fun_decl.body decltbl 
+        |> ignore
+    | _ -> ()
+  ) topdecls;
+  add_dead_decl queue decltbl;
+  List.of_seq (Queue.to_seq queue)

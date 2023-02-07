@@ -3,35 +3,6 @@ type action = Parse | Type_check | Dump_llvm_ir | Compile
 
 let[@inline] ( >> ) f g x = g (f x)
 
-(* let action_function outputfile optimize verify_module = function
-  | Parse ->
-      Parsing.parse Scanner.next_token
-      >> Ast.show_program
-      >> Printf.printf "%s\n"
-  | Type_check ->
-      Parsing.parse Scanner.next_token
-      >> Semantic_analysis.type_check 
-      >> Ast.show_program
-      >> Printf.printf "%s\n"
-  | Dump_llvm_ir ->
-      Parsing.parse Scanner.next_token
-      >> Semantic_analysis.type_check >> Codegen.to_llvm_module
-      >> (fun llmodule ->
-           if verify_module then Llvm_analysis.assert_valid_module llmodule;
-           llmodule)
-      >> (if optimize then Optimizer.optimize_module else Fun.id)
-      >> Llvm.dump_module
-  | Compile ->
-      (Parsing.parse Scanner.next_token
-      >> Semantic_analysis.type_check >> Codegen.to_llvm_module
-      >> (fun llmodule ->
-           if verify_module then Llvm_analysis.assert_valid_module llmodule;
-           Llvm_analysis.assert_valid_module llmodule;
-           llmodule)
-      >> if optimize then Optimizer.optimize_module else Fun.id)
-      >> fun llmodule ->
-      assert (Llvm_bitwriter.write_bitcode_file llmodule outputfile) *)
-
 let load_file filename =
   let ic = open_in filename in
   let n = in_channel_length ic in
@@ -45,20 +16,37 @@ let parse filename =
   let lexbuf = Lexing.from_string ~with_positions:true source in
     Parsing.parse filename Scanner.next_token lexbuf
 
-let typecheck = 
+let print_warnings = 
+  let loadedsource = Hashtbl.create 25 in
+  List.iter (fun wrng -> 
+    let filename = wrng.Warning.loc.Location.filename in
+    let source = match Hashtbl.find_opt loadedsource filename with
+        Some content -> content
+      | None -> load_file wrng.Warning.loc.Location.filename 
+    in
+      Warning.printf wrng source
+  )
+
+let typecheck =
   List.map (fun sf -> parse sf)
   >> Linker.link
   >> Semantic_analysis.type_check
+  >> (fun ast -> 
+        print_warnings (Semantic_analysis.find_deadcode ast); 
+        ast)
 
 let action_function outputfile optimize verify_module = function
   | Parse -> 
       List.iter (fun sf ->
-        Printf.printf "File: %s\n%s\n\n" sf (Ast.show_program (parse sf))
+        let ast = parse sf in
+          ast
+          |> Ast.show_program
+          |> Printf.printf "File: %s\n%s\n\n" sf
       )
   | Type_check ->
-      typecheck
+      typecheck 
       >> Ast.show_program
-      >> Printf.printf "%s\n"
+      >> Printf.printf "%s"
   | Dump_llvm_ir ->
       typecheck 
       >> Codegen.to_llvm_module

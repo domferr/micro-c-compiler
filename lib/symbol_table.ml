@@ -47,8 +47,17 @@ let end_block symbol_table =
     match symbol_table.identifiers with
       []    -> ()
     | x::xs -> List.iter (Hashtbl.remove symbol_table.tbl) x;
-              symbol_table.identifiers <- xs
+              symbol_table.identifiers <- xs;
   )
+
+let get_current_block symbol_table =
+  match symbol_table.identifiers with
+    [] -> []
+  | idelist::_ -> 
+    List.rev_map (fun ide ->
+      let found = Hashtbl.find symbol_table.tbl ide in
+        (ide, found.value)
+    ) idelist
 
 (* Return the data entry value associated to the given key, if any *)
 let lookup key symbol_table =
@@ -69,7 +78,7 @@ let add_entry key data symbol_table =
   Hashtbl.add symbol_table.tbl key new_entry;
   symbol_table.identifiers <- match symbol_table.identifiers with
     [] -> [[key]]
-    | x::xs -> let newLis = key::x in newLis::xs
+    | x::xs -> (key::x)::xs
 
 let of_alist (lis: (Ast.identifier * 'a) list) =
   let newSymbolTable = empty_table () in
