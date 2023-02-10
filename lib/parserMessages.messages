@@ -1,3 +1,9 @@
+
+
+
+
+
+
 program: WHILE
 ##
 ## Ends in an error in state: 0.
@@ -32,7 +38,7 @@ program: VOID ID WHILE
 ## VOID ID
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+global variables should not be void
 
 program: VOID ID LPAREN WHILE
 ##
@@ -58,7 +64,7 @@ program: BOOL ID LPAREN BOOL WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL MULT WHILE
+program: BOOL LPAREN MULT WHILE
 ##
 ## Ends in an error in state: 8.
 ##
@@ -119,7 +125,7 @@ program: BOOL ID LBRACKET INTEGER WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL MULT ID WHILE
+program: BOOL LPAREN MULT ID WHILE
 ##
 ## Ends in an error in state: 17.
 ##
@@ -1674,7 +1680,7 @@ program: BOOL ID LPAREN RPAREN LBRACE BOOL WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL MULT ID RPAREN
+program: BOOL MULT MULT ID RPAREN
 ##
 ## Ends in an error in state: 140.
 ##
@@ -1688,6 +1694,7 @@ program: BOOL MULT ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 17, spurious reduction of production vardesc -> MULT vardesc
 ## In state 17, spurious reduction of production vardesc -> MULT vardesc
 ##
 
@@ -1791,16 +1798,91 @@ program: BOOL WHILE
 ##
 ## topdecls -> typ . separated_nonempty_list(COMMA,vardecl) SEMICOL topdecls [ EOF ]
 ## topdecls -> typ . ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
+## topdecls -> typ . MULT ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
 ## The known suffix of the stack is as follows:
 ## typ
+##
+
+invalid function return type
+
+program: BOOL MULT WHILE
+##
+## Ends in an error in state: 156.
+##
+## topdecls -> typ MULT . ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
+## vardesc -> MULT . vardesc [ SEMICOL LBRACKET COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## typ MULT
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL MULT ID WHILE
+##
+## Ends in an error in state: 157.
+##
+## topdecls -> typ MULT ID . LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
+## vardesc -> ID . [ SEMICOL LBRACKET COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## typ MULT ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL MULT ID LPAREN WHILE
+##
+## Ends in an error in state: 158.
+##
+## topdecls -> typ MULT ID LPAREN . loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## typ MULT ID LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL MULT ID LPAREN RPAREN WHILE
+##
+## Ends in an error in state: 160.
+##
+## topdecls -> typ MULT ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN . block topdecls [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## typ MULT ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL MULT ID LPAREN RPAREN LBRACE RBRACE WHILE
+##
+## Ends in an error in state: 161.
+##
+## topdecls -> typ MULT ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block . topdecls [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## typ MULT ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: BOOL ID LPAREN BOOL ID COMMA WHILE
+##
+## Ends in an error in state: 164.
+##
+## separated_nonempty_list(COMMA,formal) -> formal COMMA . separated_nonempty_list(COMMA,formal) [ RPAREN ]
+##
+## The known suffix of the stack is as follows:
+## formal COMMA
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: BOOL ID WHILE
 ##
-## Ends in an error in state: 156.
+## Ends in an error in state: 166.
 ##
 ## topdecls -> typ ID . LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ## vardesc -> ID . [ SEMICOL LBRACKET COMMA ASSIGN ]
@@ -1813,7 +1895,7 @@ program: BOOL ID WHILE
 
 program: BOOL ID LPAREN WHILE
 ##
-## Ends in an error in state: 157.
+## Ends in an error in state: 167.
 ##
 ## topdecls -> typ ID LPAREN . loption(separated_nonempty_list(COMMA,formal)) RPAREN block topdecls [ EOF ]
 ##
@@ -1825,7 +1907,7 @@ program: BOOL ID LPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN WHILE
 ##
-## Ends in an error in state: 159.
+## Ends in an error in state: 169.
 ##
 ## topdecls -> typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN . block topdecls [ EOF ]
 ##
@@ -1837,7 +1919,7 @@ program: BOOL ID LPAREN RPAREN WHILE
 
 program: BOOL ID LPAREN RPAREN LBRACE RBRACE WHILE
 ##
-## Ends in an error in state: 160.
+## Ends in an error in state: 170.
 ##
 ## topdecls -> typ ID LPAREN loption(separated_nonempty_list(COMMA,formal)) RPAREN block . topdecls [ EOF ]
 ##
@@ -1847,21 +1929,9 @@ program: BOOL ID LPAREN RPAREN LBRACE RBRACE WHILE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: BOOL ID LPAREN BOOL ID COMMA WHILE
-##
-## Ends in an error in state: 163.
-##
-## separated_nonempty_list(COMMA,formal) -> formal COMMA . separated_nonempty_list(COMMA,formal) [ RPAREN ]
-##
-## The known suffix of the stack is as follows:
-## formal COMMA
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 program: BOOL ID SEMICOL WHILE
 ##
-## Ends in an error in state: 166.
+## Ends in an error in state: 173.
 ##
 ## topdecls -> typ separated_nonempty_list(COMMA,vardecl) SEMICOL . topdecls [ EOF ]
 ##
@@ -1870,4 +1940,3 @@ program: BOOL ID SEMICOL WHILE
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
-

@@ -104,7 +104,7 @@ topdecls:
     { 
       let block_node = build_node $loc(b) b in 
       (build_node $loc (Ast.Fundecl{ 
-        typ = $1; fname = $2; formals = form; body = block_node 
+        typ = $1; fname = $2; formals = form; body = Some(block_node)
       }))::lis
     }
 ;
@@ -124,10 +124,11 @@ typ:
   | BOOL  { Ast.TypB }
 ;
 
-/* Functions can return all the types plus void type */
+/* Functions can return all the types plus void type and pointer, but not arrays */
 %inline return_typ:
-    VOID  { Ast.TypV }
-  | typ   { $1 }
+    VOID      { Ast.TypV }
+  | typ       { $1 }
+  | typ MULT  { Ast.TypP($1) }
 ;
 
 formal:
@@ -138,7 +139,7 @@ vardesc:
     ID                                { ((fun t -> t), $1) }
   | MULT vardesc                      { ((fun t -> fst $2 (Ast.TypP(t))), snd $2 ) }
   | LPAREN vardesc RPAREN             { $2 }
-  | vardesc LBRACKET integer=option(INTEGER) RBRACKET /* todo: can I declare an array without a size? */
+  | vardesc LBRACKET integer=option(INTEGER) RBRACKET
                                       { ((fun t -> fst $1 (Ast.TypA(t, integer))), snd $1 ) } 
 ;
 

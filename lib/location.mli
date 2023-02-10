@@ -13,4 +13,6 @@ type code_pos = {
 val to_lexeme_position : Lexing.lexbuf -> lexeme_pos
 val to_code_position : Lexing.position * Lexing.position -> code_pos
 val dummy_code_pos : code_pos
+val dummy_code_pos_from : string -> code_pos
 val dummy_lexeme_pos : lexeme_pos
+val dummy_lexeme_pos_from: string -> lexeme_pos

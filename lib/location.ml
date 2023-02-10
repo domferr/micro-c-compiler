@@ -32,4 +32,10 @@ let to_code_position (start_position, end_position) =
 let dummy_code_pos =
   { filename = ""; start_line = 0; start_column = 0; end_line = 0; end_column = 0 }
 
+let dummy_code_pos_from filename =
+  { filename; start_line = 0; start_column = 0; end_line = 0; end_column = 0 }
+
 let dummy_lexeme_pos = { filename = ""; line = 0; start_column = 0; end_column = 0 }
+
+let dummy_lexeme_pos_from filename = 
+  { filename; line = 0; start_column = 0; end_column = 0 }

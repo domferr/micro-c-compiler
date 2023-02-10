@@ -368,13 +368,6 @@ int main() {
 }"
 );
 (
-"Assignment of int to a bool",
-"void main() {
-  int a[10];
-  int *b = a; /* assignment of int to a bool */
-}"
-);
-(
 "Assignment of bool to a int",
 "bool f = false;
 
@@ -602,6 +595,15 @@ void main() {
 }
 
 int foo() {}"
+);
+(
+"Initializer element is not a compile-time constant",
+"int invalid = 10;
+int global2 = 10 + 2 + invalid;
+
+void main() {
+    
+}"
 )
 ]
 
@@ -609,7 +611,7 @@ let run_test sourcecode =
   let lexbuf = Lexing.from_string ~with_positions:true sourcecode in 
   try
     lexbuf |> Parsing.parse "" Scanner.next_token |>
-    Semantic_analysis.type_check |>
+    (fun program -> Semantic_analysis.type_check program (Ast.Prog([])) true) |>
     ignore; false
   with 
   | Sem_error.Semantic_error _ -> true

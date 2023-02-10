@@ -20,8 +20,8 @@ let run_test sourcecodes =
       let lexbuf = Lexing.from_string ~with_positions:true sourcecode in
       Parsing.parse "" Scanner.next_token lexbuf
     ) sourcecodes in
-      programs |> Linker.link |>
-      Semantic_analysis.type_check |>
+      programs |> Linker.link_asts |>
+      (fun program -> Semantic_analysis.type_check program (Ast.Prog([])) true) |>
       ignore; false
   with 
   | Sem_error.Semantic_error _ -> true

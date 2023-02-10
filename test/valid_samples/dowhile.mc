@@ -1,6 +1,10 @@
 void main() {
-    bool b;
+    int i = 10;
+    bool b = true;
     do {
-        int a;
+        int a = i;
+        print(a);
+        i++;
+        b = a < 20;
     } while(b);
 }

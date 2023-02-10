@@ -1,2 +1,1 @@
-val type_check: Ast.program -> Ast.program
-val find_deadcode: Ast.program -> Warning.warning list
+val type_check : Ast.program -> Ast.program -> bool -> Ast.program

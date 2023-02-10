@@ -2,11 +2,11 @@ open Ast
 
 exception Semantic_error of Location.code_pos * string
 
-let raise_variable_main node = raise(Semantic_error(node.loc,
+let raise_variable_main loc = raise(Semantic_error(loc,
   "Cannot declare 'main' variable: this name is reserved for the 'main' function"
 ))
 
-let raise_invalid_def_main node = raise(Semantic_error(node.loc, 
+let raise_invalid_def_main loc = raise(Semantic_error(loc, 
   "Invalid definition of the 'main' function. The signature must be 'int main()' or 'void main()'"
 ))
 
@@ -35,13 +35,23 @@ let raise_invalid_array_index node = raise(Semantic_error(node.loc,
   "Invalid array indexing"
 ))
 
-let descr_typ typ = match typ with
-    Ast.TypI    -> "integer"
-  | Ast.TypB    -> "boolean"
+let rec descr_typ = function
+    Ast.TypI    -> "int"
+  | Ast.TypB    -> "bool"
   | Ast.TypC    -> "char"
   | Ast.TypV    -> "void"
-  | Ast.TypA _  -> "array"
-  | Ast.TypP _  -> "pointer"
+  | Ast.TypA(t, size) ->
+    let sizetostring = function
+        Some s -> Printf.sprintf "[%d]" s
+      | None -> "[]"
+    in
+    let rec looper sizes = function
+        Ast.TypA(t2, s1) -> looper (Printf.sprintf "%s%s" sizes (sizetostring s1)) t2
+      | anytyp -> (descr_typ anytyp, sizes)
+    in
+    let arrtyp, sizes = looper (sizetostring size) t in
+    Printf.sprintf "%s%s" arrtyp sizes
+  | Ast.TypP t  -> (descr_typ t)^"*"
   | Ast.TypNull -> "null"
 
 let raise_invalid_assignment_type node left_typ right_typ = raise(Semantic_error(
@@ -49,8 +59,16 @@ let raise_invalid_assignment_type node left_typ right_typ = raise(Semantic_error
   Printf.sprintf "Invalid assignment of %s to %s" (descr_typ right_typ) (descr_typ left_typ)
 ))
 
+let raise_not_compiletime_constant node = raise(Semantic_error(node.loc, 
+  "Initializer element is not a compile-time constant"
+))
+
 let raise_invalid_unary_op node = raise(Semantic_error(node.loc, 
   "Invalid unary operation"
+))
+
+let raise_invalid_unary_op_access node = raise(Semantic_error(node.loc, 
+  "Cannot apply unary operation to this element"
 ))
 
 let raise_invalid_binary_op node = raise(Semantic_error(node.loc, 
@@ -59,6 +77,10 @@ let raise_invalid_binary_op node = raise(Semantic_error(node.loc,
 
 let raise_invalid_binary_comparison node left_typ right_typ = raise(Semantic_error(node.loc, 
   Printf.sprintf "Invalid binary operation. Cannot compare %s with %s" (descr_typ left_typ) (descr_typ right_typ)
+))
+
+let raise_invalid_function_body node = raise(Semantic_error(node.loc, 
+  "Function body is not a block"
 ))
 
 let raise_invalid_function_arg_type node req_typ given_typ = raise(Semantic_error(node.loc, 
@@ -92,4 +114,12 @@ let raise_missing_return node = raise(Semantic_error(node.loc,
 
 let raise_missing_array_size node = raise(Semantic_error(node.loc, 
   "Cannot declare array without a size"
+))
+
+let raise_missing_multidimensional_array_size node = raise(Semantic_error(node.loc, 
+  "Multidimensional array has incomplete element type"
+))
+
+let raise_reserved_for_rts ide loc = raise(Semantic_error(loc, 
+  Printf.sprintf "Redeclaration of '%s' as a different symbol. It is reserved for run-time support library" ide
 ))

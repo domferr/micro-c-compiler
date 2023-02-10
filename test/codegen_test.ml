@@ -1,5 +1,7 @@
 open Microc
 
+let[@inline] ( >> ) f g x = g (f x)
+
 let handle_syntatic_error source lexeme_pos msg = 
   let lines = String.split_on_char '\n' source in 
   let line = List.nth lines (lexeme_pos.Location.line - 1) in
@@ -18,7 +20,7 @@ let handle_semantic_error source code_pos msg =
     let line = List.hd lines in  
     let prefix = String.make (code_pos.Location.start_column - 1) ' ' in 
     let middle = String.make (code_pos.Location.end_column - code_pos.Location.start_column + 1) '^' in 
-    Printf.printf "\n*** Error at line %d.\n%s\n%s%s\n*** %s\n\n" code_pos.Location.start_line line prefix middle msg
+    Printf.eprintf "\n*** Error at line %d.\n%s\n%s%s\n*** %s\n\n" code_pos.Location.start_line line prefix middle msg
   else
     let text = 
       lines |>
@@ -42,11 +44,11 @@ let process_source filename =
   let source = load_file filename in 
   let lexbuf = Lexing.from_string ~with_positions:true source in 
   try
-    let llmodule = 
-      lexbuf |> Parsing.parse filename Scanner.next_token |>
-      Semantic_analysis.type_check |>
-      Codegen.to_llvm_module
-    in 
+    let ast = lexbuf |> Parsing.parse filename Scanner.next_token |>
+      (fun program -> Semantic_analysis.type_check program (Ast.Prog([])) true)
+    in
+    let microcmodule = Llvm.create_module (Llvm.global_context()) "microcc" in
+    let llmodule = Codegen.to_llvm_module ast microcmodule in
     Llvm_analysis.assert_valid_module llmodule; 
     Printf.printf "; Code generation succeded!\n\n%s\n" (Llvm.string_of_llmodule llmodule)  
   with 

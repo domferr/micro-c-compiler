@@ -1,7 +1,6 @@
 {
 	open Parser
 
-	(* Auxiliary definitions *)
 	exception Lexing_error of Location.lexeme_pos * string
 
 	let raise_error lexbuf msg = 
@@ -29,7 +28,7 @@
 			("NULL", 	NULL)
 		]
 	
-	(* special characters are \', \b, \f, \t, \\, \r, and \n *)
+	(* special characters are ', \b, \t, \, \r, and \n *)
 	let to_special_character c = match c with
 		  'b'	-> Some '\b'
 		| 't'	-> Some '\t'
@@ -51,7 +50,13 @@ let identifier = (letter | '_') (letter | digit | '_')*
 rule next_token = parse
 	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
 	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
-	| integer as lit	{ INTEGER(int_of_string lit) }	(* int_of_string function recognizes hexadecimal notation *)
+	| integer as lit	
+	{ 
+		try (* int_of_string function recognizes hexadecimal notation too *)
+			INTEGER(int_of_string lit) 
+		with Failure _ -> 
+			raise_error lexbuf "Not a valid integer or exceeds the range of integers representable in type int"
+	}
 	| identifier as word 
 	{	(* identifier or keyword *)
 		match Hashtbl.find_opt keywords_table word with 
