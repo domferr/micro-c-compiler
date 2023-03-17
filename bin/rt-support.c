@@ -20,5 +20,9 @@ void printchar(char ch) {
 }
 
 void printbool(int b) {
-  printf("%d\n", b);
+  if (b) {
+    printf("true\n");
+  } else {
+    printf("false\n");
+  }
 }
