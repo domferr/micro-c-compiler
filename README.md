@@ -1,3 +1,5 @@
+![logo](./logo.png)
+
 # MicroC Compiler
 
 MicroC is a subset of the language C with the following simplification:
