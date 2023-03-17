@@ -82,6 +82,10 @@ let llvm_binop_fun = function
   | Ast.And -> Llvm.build_and
   | Ast.Or -> Llvm.build_or
 
+let llvm_ensure_block_terminator builder after =
+  let terminator = Llvm.block_terminator (Llvm.insertion_block builder) in
+  if Option.is_none terminator then after builder |> ignore else ()
+  
 let rec codegen_expr ctx expr =
   match expr.node with
       Ast.ILiteral(lit) -> llvm_const ctx Ast.TypI lit
@@ -90,18 +94,59 @@ let rec codegen_expr ctx expr =
     | Ast.Null -> llvm_null ctx
     | Ast.UnaryOp(uop, uopexp) -> codegen_uop ctx uop uopexp
     | Ast.BinaryOp(binop, left, right) ->
-        (* Generate code for both sides of binary op *)
+        (* Generate code for left side of binary op *)
         let llleft = codegen_expr ctx left in
-        let llright = codegen_expr ctx right in
-        (* Handle the case in which there is NULL on the right or on the left (but not on both sides).
-           If NULL bop rightexpr then NULL has to be of the same type of rightexpr. When NULL is on 
-           the right, it is specular. *)
-        let (llleft, llright) = match llvm_isnull llleft ctx, llvm_isnull llright ctx with
-            true, false -> (llvm_null_of llright, llright)
-          | false, true -> (llleft, llvm_null_of llleft)
-          | _ -> (llleft, llright)
-        in
-        (llvm_binop_fun binop) llleft llright "binop" ctx.ibuilder
+        let fundef, doshortc = try (* get the current function, if any *)
+          Llvm.block_parent (Llvm.insertion_block ctx.ibuilder), true
+        with _ -> llvm_null ctx, false in (* it is a binop in a global variable *)
+        (match binop, doshortc with
+          Ast.Or, true | Ast.And, true -> (* Do short circuiting *)
+            let bcurr = Llvm.insertion_block ctx.ibuilder in (* current block *)
+            let bisneq = Llvm.append_block ctx.llcontext "" fundef in (* block to go if left != false *)
+            let isneq_builder = Llvm.builder_at_end ctx.llcontext bisneq in
+            let llfalse = llvm_const ctx Ast.TypB 0 in
+            let leftneqicmp = if get_ast_typ (Llvm.type_of llleft) == Some(Ast.TypB) then
+              llleft (* it is already an icmp, do not create another one *)
+            else
+              (llvm_binop_fun Ast.Neq) llleft llfalse "" ctx.ibuilder 
+            in 
+            let current_builder = ctx.ibuilder in (* cache current block builder *)
+            ctx.ibuilder <- isneq_builder;
+            (* Generate code for right side of binary op *)
+            let llright = codegen_expr ctx right in
+            let rightneqicmp = if get_ast_typ (Llvm.type_of llright) == Some(Ast.TypB) then
+              llright (* it is already an icmp, do not create another one *)
+            else
+              (llvm_binop_fun Ast.Neq) llright llfalse "" ctx.ibuilder
+            in
+            (* result if left was true *)
+            let llbool = llvm_const ctx Ast.TypB (if binop == Ast.Or then 1 else 0) in
+            let bcont = Llvm.append_block ctx.llcontext "" fundef in (* block to continue the execution *)
+            let _ = Llvm.build_br bcont ctx.ibuilder in
+            (* get the last block. May be changed because of code generation of right statements *)
+            let lastblock = Llvm.insertion_block ctx.ibuilder in
+            (* come back to the beginning and add br *)
+            ctx.ibuilder <- current_builder;
+            let _ = if binop == Ast.Or then 
+              Llvm.build_cond_br leftneqicmp bcont bisneq ctx.ibuilder 
+            else
+              Llvm.build_cond_br leftneqicmp bisneq bcont ctx.ibuilder 
+            in
+            (* go to the end of all the blocks and add phi *)
+            Llvm.position_at_end bcont ctx.ibuilder;
+            Llvm.build_phi [(llbool, bcurr); (rightneqicmp, lastblock)] "" ctx.ibuilder
+        | _ -> (* Do not do short circuiting *)
+          (* Generate code for right side of binary op *)
+          let llright = codegen_expr ctx right in
+          (* Handle the case in which there is NULL on the right or on the left (but not on both sides).
+            If NULL bop rightexpr then NULL has to be of the same type of rightexpr. When NULL is on 
+            the right, it is specular. *)
+          let (llleft, llright) = match llvm_isnull llleft ctx, llvm_isnull llright ctx with
+              true, false -> (llvm_null_of llright, llright)
+            | false, true -> (llleft, llvm_null_of llleft)
+            | _ -> (llleft, llright)
+          in
+          (llvm_binop_fun binop) llleft llright "binop" ctx.ibuilder)
     | Ast.Access(acc) -> 
         let llacc = codegen_access ctx acc in
         (* Check if accessing an array. Note: llacc is always a pointer *)
@@ -121,20 +166,20 @@ let rec codegen_expr ctx expr =
       codegen_access ctx acc
     | Ast.Call(fname, params) ->
       (* Get the function from the symbol table *)
-      let fundef = match Symbol_table.lookup fname ctx.symbtbl with
+      let fundeftocall = match Symbol_table.lookup fname ctx.symbtbl with
           None -> Sem_error.raise_missing_fun_declaration expr fname
         | Some fd -> fd
       in
       (* Map each given parameter to LLVM code *)
       let llparams = List.mapi (fun i param ->
         let llgivenparam = codegen_expr ctx param in
-        let requiredparam = Llvm.param fundef i in
+        let requiredparam = Llvm.param fundeftocall i in
         (* if null is given as parameter, get the equivalent null pointer *)
         if llvm_isnull llgivenparam ctx then llvm_null_of requiredparam
         else llgivenparam
       ) params in
       (* Build function call *)
-      Llvm.build_call fundef (Array.of_list llparams) "" ctx.ibuilder
+      Llvm.build_call fundeftocall (Array.of_list llparams) "" ctx.ibuilder
 and codegen_uop ctx uop uopexp =
   match uop, uopexp.node with 
       Ast.Not, _ -> 
@@ -175,16 +220,12 @@ and codegen_access ctx access = (* always returns a pointer *)
             Llvm.TypeKind.Array -> llacc, [| llvm_const ctx Ast.TypI 0 ; llind |]
           | _ -> (Llvm.build_load llacc "accessptr" ctx.ibuilder, [| llind |]) (* access of index of a pointer *)
       in Llvm.build_in_bounds_gep llp indices "accindex" ctx.ibuilder
-
-let llvm_ensure_block_terminator builder after =
-  let terminator = Llvm.block_terminator (Llvm.insertion_block builder) in
-  if Option.is_none terminator then after builder |> ignore else ()
   
-let rec codegen_stmt fundef ctx retyp stmt =
+let rec codegen_stmt ctx retyp stmt =
   match stmt.node with
     Ast.Block stmtordeclist -> 
       Symbol_table.begin_block ctx.symbtbl;
-      let has_return = codegen_stmtordeclist fundef ctx retyp stmtordeclist in
+      let has_return = codegen_stmtordeclist ctx retyp stmtordeclist in
       Symbol_table.end_block ctx.symbtbl;
       Option.is_some has_return
   | Ast.Return None -> 
@@ -200,6 +241,7 @@ let rec codegen_stmt fundef ctx retyp stmt =
   | Ast.Expr e -> codegen_expr ctx e |> ignore; false
   | Ast.If(guard, thbr, elbr) -> 
     let icmp = codegen_expr ctx guard in
+    let fundef = Llvm.block_parent (Llvm.insertion_block ctx.ibuilder) in
     let bthen = Llvm.append_block ctx.llcontext "then" fundef in
     let belse = Llvm.append_block ctx.llcontext "else" fundef in
     let bcont = Llvm.append_block ctx.llcontext "cont" fundef in
@@ -208,15 +250,16 @@ let rec codegen_stmt fundef ctx retyp stmt =
     let current_builder = ctx.ibuilder in
     let _ = Llvm.build_cond_br icmp bthen belse current_builder in
     ctx.ibuilder <- then_builder;
-    let _ = codegen_stmt fundef ctx retyp thbr in
+    let _ = codegen_stmt ctx retyp thbr in
     llvm_ensure_block_terminator then_builder (Llvm.build_br bcont);
     ctx.ibuilder <- else_builder;
-    let _ = codegen_stmt fundef ctx retyp elbr in
+    let _ = codegen_stmt ctx retyp elbr in
     llvm_ensure_block_terminator else_builder (Llvm.build_br bcont);
     ctx.ibuilder <- current_builder;
     Llvm.position_at_end bcont current_builder;
     false
   | Ast.While(guard, body) ->
+    let fundef = Llvm.block_parent (Llvm.insertion_block ctx.ibuilder) in
     let bcond = Llvm.append_block ctx.llcontext "condition" fundef in
     let bbody = Llvm.append_block ctx.llcontext "whilebody" fundef in
     let bcont = Llvm.append_block ctx.llcontext "cont" fundef in
@@ -230,12 +273,12 @@ let rec codegen_stmt fundef ctx retyp stmt =
     let icmp = codegen_expr ctx guard in
     let _ = Llvm.build_cond_br icmp bbody bcont cond_builder in
     ctx.ibuilder <- body_builder;
-    let _ = codegen_stmt fundef ctx retyp body in
+    let _ = codegen_stmt ctx retyp body in
     Llvm.build_br bcond |> llvm_ensure_block_terminator body_builder;
     ctx.ibuilder <- current_builder;
     Llvm.position_at_end bcont current_builder;
     false
-and codegen_stmtordeclist fundef ctx retyp stmtordeclist = List.find_opt (function
+and codegen_stmtordeclist ctx retyp stmtordeclist = List.find_opt (function
     { node = Ast.Dec(vd); _ } -> 
       let llinit = match vd.init with 
         None -> None  
@@ -244,7 +287,7 @@ and codegen_stmtordeclist fundef ctx retyp stmtordeclist = List.find_opt (functi
       codegen_local_vardecl ctx vd.typ vd.vname llinit;
       false
   | { node = Ast.Stmt(stmt); _ } -> 
-      codegen_stmt fundef ctx retyp stmt
+      codegen_stmt ctx retyp stmt
   ) stmtordeclist
 and get_default_value ctx typ = (* Return the default llvalue of the given type *)
   match typ with
@@ -292,7 +335,7 @@ let codegen_fundecl fundecl body ctx =
   | _ -> Sem_error.raise_invalid_function_body body in
   let retyp = llvm_type_of ctx fundecl.typ in
   (* generate function body *)
-  codegen_stmtordeclist fundef ctx retyp stmtdeclis |> ignore;
+  codegen_stmtordeclist ctx retyp stmtdeclis |> ignore;
   Symbol_table.end_block ctx.symbtbl;
   (* Check if the function has a return as last element in the block.
      If the function returns void, the source code may not have a final 
@@ -323,7 +366,7 @@ let to_llvm_module (Ast.Prog(topdecls)) llmodule =
     llcontext; 
     llmodule; 
     symbtbl = Symbol_table.empty_table();
-    ibuilder = Llvm.builder llcontext
+    ibuilder = Llvm.builder llcontext;
   } in
   (* Utility function to loop through global variables and functions of a LLVM module *)
   let llvm_iter_topdecls iterator llm =

@@ -32,7 +32,7 @@ do
             printf "$PASS_COLOR[ PASS ]$RESET_COLOR %s, %s\n" "${sources[i]}" "${results[i]}"
             ((total_pass=total_pass+1))
         else
-            printf "$FAILED_COLOR[ FAIL ]$RESET_COLOR %s, %s\nCorrect result: %s\nGiven result: %s\n\n" "${sources[i]}" "${results[i]}" $correctres $exeres
+            printf "$FAILED_COLOR[ FAIL ]$RESET_COLOR %s, %s\nCorrect result: %s\nGiven result: %s\n\n" "${sources[i]}" "${results[i]}" "$correctres" "$exeres"
             ((total_fail=total_fail+1))
         fi
 
