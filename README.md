@@ -2,6 +2,11 @@
 
 # MicroC Compiler
 
+Microcc, a compiler for the simplified C programming language MicroC. The compiler supports sep-
+arate compilation and enables the compilation of source code and LLVM bitcode
+together. The task of generating the executable is delegated to clang, which in-
+vokes the linker correctly.
+
 MicroC is a subset of the language C with the following simplification:
 
 * It supports only integers (`int`), characters (`char`) and booleans (`bool`) as scalar values, array and pointers as compound data types;
